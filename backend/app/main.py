@@ -101,10 +101,22 @@ app.include_router(reminders_router, prefix="/api/v1/reminders", tags=["reminder
 app.include_router(symptom_check_router, prefix="/api/v1/symptom-check", tags=["symptom_check"])
 app.include_router(triage_rules_router, prefix="/api/v1/triage-rules", tags=["triage_rules"])
 
+import traceback
+from fastapi.responses import JSONResponse
+
+@app.exception_handler(Exception)
+async def global_exception_handler(request, exc):
+    print(f"Unhandled error on {request.url}: {exc}")
+    traceback.print_exc()
+    return JSONResponse(
+        status_code=500,
+        content={"error": "Internal Server Error", "detail": str(exc)}
+    )
+
 @app.get("/")
 def root():
     return {"message": "Welcome to HEMC API"}
 
 @app.get("/health")
 def health():
-    return {"status": "ok"}
+    return {"status": "ok", "version": "1.0.1"}
