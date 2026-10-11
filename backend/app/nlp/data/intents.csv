@@ -1,0 +1,34 @@
+text,intent
+hello,greeting
+hi,greeting
+hi there,greeting
+good morning,greeting
+good afternoon,greeting
+what is malaria,education_malaria_general
+explain malaria to me,education_malaria_general
+what are the symptoms of malaria,education_malaria_symptom
+how do I know if I have malaria,education_malaria_symptom
+malaria signs,education_malaria_symptom
+how do I prevent malaria,education_malaria_prevention
+how to avoid malaria,education_malaria_prevention
+malaria prevention,education_malaria_prevention
+what causes malaria,education_malaria_cause
+how is malaria transmitted,education_malaria_cause
+what is typhoid fever,education_typhoid_general
+explain typhoid,education_typhoid_general
+what are the symptoms of typhoid,education_typhoid_symptom
+typhoid signs,education_typhoid_symptom
+how do I prevent typhoid,education_typhoid_prevention
+typhoid prevention,education_typhoid_prevention
+what causes typhoid,education_typhoid_cause
+how is typhoid spread,education_typhoid_cause
+I have been having fever for 3 days,symptom_check_start
+I feel hot and have a headache,symptom_check_start
+I am vomiting continuously,symptom_check_start
+my body is hot,symptom_check_start
+I have a fever,symptom_check_start
+I want to see a doctor,book_appointment
+schedule an appointment,book_appointment
+book a consultation,book_appointment
+I need an appointment,book_appointment
+book appointment,book_appointment

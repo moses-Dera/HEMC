@@ -1,0 +1,18 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: hemc_postgres
+    environment:
+      POSTGRES_USER: hemc_user
+      POSTGRES_PASSWORD: hemc_password
+      POSTGRES_DB: hemc_db
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
