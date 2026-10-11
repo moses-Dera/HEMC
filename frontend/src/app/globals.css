@@ -38,6 +38,25 @@ input, textarea, select {
   font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
 }
 
+/* ── Interactive Controls Cursor Reset ── */
+button,
+[role="button"],
+[type="button"],
+[type="submit"],
+[type="reset"],
+a,
+label,
+select,
+summary {
+  cursor: pointer;
+}
+
+button:disabled,
+[disabled],
+[aria-disabled="true"] {
+  cursor: not-allowed;
+}
+
 /* Force native select options to match dark mode */
 .dark select option {
   background-color: var(--color-bg-card-dark);

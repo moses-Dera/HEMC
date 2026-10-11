@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutGrid, MessageCircle, Clock, User } from 'lucide-react';
+import { LayoutDashboard, MessageCircle, Clock, User, ShieldCheck, Stethoscope } from 'lucide-react';
 
 export default function BottomNav({ userRole }: { userRole?: string }) {
   const pathname = usePathname();
@@ -31,17 +31,17 @@ export default function BottomNav({ userRole }: { userRole?: string }) {
   }, []);
 
   const navItems = [
-    { name: 'Dashboard', href: '/dashboard', icon: LayoutGrid },
+    { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
     { name: 'Chat', href: '/chat', icon: MessageCircle },
     { name: 'History', href: '/history', icon: Clock },
     { name: 'Profile', href: '/profile', icon: User },
   ];
 
   if (userRole === 'admin') {
-    navItems.push({ name: 'Admin', href: '/admin/dashboard', icon: LayoutGrid });
+    navItems.push({ name: 'Admin', href: '/admin/dashboard', icon: ShieldCheck });
   }
   if (userRole === 'doctor' || userRole === 'admin') {
-    navItems.push({ name: 'Doctor', href: '/doctor/dashboard', icon: LayoutGrid });
+    navItems.push({ name: 'Doctor', href: '/doctor/dashboard', icon: Stethoscope });
   }
 
   return (

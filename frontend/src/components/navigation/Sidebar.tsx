@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutGrid, MessageCircle, Clock, User, LogOut } from 'lucide-react';
+import { LayoutDashboard, MessageCircle, Clock, User, LogOut, ShieldCheck, Stethoscope } from 'lucide-react';
 import Image from 'next/image';
 import { logout } from '@/lib/auth';
 import NotificationBell from '@/components/ui/NotificationBell';
@@ -11,17 +11,17 @@ export default function Sidebar({ userRole }: { userRole?: string }) {
   const pathname = usePathname();
 
   const navItems = [
-    { name: 'Dashboard', href: '/dashboard', icon: LayoutGrid },
+    { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
     { name: 'AI Chatbot', href: '/chat', icon: MessageCircle },
     { name: 'History', href: '/history', icon: Clock },
     { name: 'Profile', href: '/profile', icon: User },
   ];
 
   if (userRole === 'admin') {
-    navItems.push({ name: 'System Admin', href: '/admin/dashboard', icon: LayoutGrid });
+    navItems.push({ name: 'System Admin', href: '/admin/dashboard', icon: ShieldCheck });
   }
   if (userRole === 'doctor' || userRole === 'admin') {
-    navItems.push({ name: 'Doctor Panel', href: '/doctor/dashboard', icon: LayoutGrid });
+    navItems.push({ name: 'Doctor Panel', href: '/doctor/dashboard', icon: Stethoscope });
   }
 
   return (
