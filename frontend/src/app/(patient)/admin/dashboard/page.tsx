@@ -7,11 +7,8 @@ import {
   getMe 
 } from '@/lib/api';
 import { redirect } from 'next/navigation';
-import AdminUsersManagement from './AdminUsersManagement';
-import AdminDutyRosterScheduler from './AdminDutyRosterScheduler';
-import AdminTriageRulesManager from './AdminTriageRulesManager';
-import AdminUrgentCasesQueue from './AdminUrgentCasesQueue';
-import { ShieldCheck, Stethoscope, Activity } from 'lucide-react';
+import { ShieldCheck } from 'lucide-react';
+import AdminDashboardTabs from './AdminDashboardTabs';
 
 export default async function AdminDashboardPage() {
   const user = await getMe();
@@ -29,7 +26,7 @@ export default async function AdminDashboardPage() {
   ]);
 
   return (
-    <div className="w-full max-w-6xl mx-auto p-4 md:p-8 space-y-8 pb-32 md:pb-12 overflow-y-auto h-full">
+    <div className="w-full max-w-6xl mx-auto p-4 md:p-8 space-y-6 pb-32 md:pb-12 overflow-y-auto h-full">
       {/* ── Page Header ───────────────────────────────────────────────────── */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-200/80 dark:border-white/10 pb-6">
         <div>
@@ -59,17 +56,15 @@ export default async function AdminDashboardPage() {
         </div>
       </div>
 
-      {/* ── 1. Urgent Cases & Clinical Escalations Queue ────────────────────── */}
-      <AdminUrgentCasesQueue initialCases={urgentCases} />
-
-      {/* ── 2. Users Table with Pagination & Role Management ───────────────── */}
-      <AdminUsersManagement initialUsers={users} currentUserId={user.id} />
-
-      {/* ── 3. Doctor Duty Roster Visual Scheduler ─────────────────────────── */}
-      <AdminDutyRosterScheduler initialShifts={shifts} doctors={doctors} />
-
-      {/* ── 4. Interactive Triage Rules Configuration ─────────────────────── */}
-      <AdminTriageRulesManager initialRules={rules} />
+      {/* ── Tabbed Dashboard Manager ────────────────────────────────────────── */}
+      <AdminDashboardTabs
+        urgentCases={urgentCases}
+        users={users}
+        currentUserId={user.id}
+        shifts={shifts}
+        doctors={doctors}
+        rules={rules}
+      />
     </div>
   );
 }
