@@ -1,8 +1,17 @@
-import { getTriageRules, getDoctors, getAdminUsers, getDutyShifts, getMe } from '@/lib/api';
+import { 
+  getTriageRules, 
+  getDoctors, 
+  getAdminUsers, 
+  getDutyShifts, 
+  getUrgentSymptomChecks, 
+  getMe 
+} from '@/lib/api';
 import { redirect } from 'next/navigation';
 import AdminUsersManagement from './AdminUsersManagement';
 import AdminDutyRosterScheduler from './AdminDutyRosterScheduler';
-import { ShieldCheck, Stethoscope, SlidersHorizontal, Activity } from 'lucide-react';
+import AdminTriageRulesManager from './AdminTriageRulesManager';
+import AdminUrgentCasesQueue from './AdminUrgentCasesQueue';
+import { ShieldCheck, Stethoscope, Activity } from 'lucide-react';
 
 export default async function AdminDashboardPage() {
   const user = await getMe();
@@ -11,11 +20,12 @@ export default async function AdminDashboardPage() {
     redirect('/dashboard');
   }
 
-  const [rules, doctors, users, shifts] = await Promise.all([
+  const [rules, doctors, users, shifts, urgentCases] = await Promise.all([
     getTriageRules(),
     getDoctors(),
     getAdminUsers(),
     getDutyShifts(),
+    getUrgentSymptomChecks(),
   ]);
 
   return (
@@ -34,7 +44,7 @@ export default async function AdminDashboardPage() {
             System Administration
           </h1>
           <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-            Manage student & staff accounts, schedule weekly doctor duty rosters, and configure clinical AI operations.
+            Track emergency triage escalations, manage user accounts, schedule doctor rosters, and configure clinical AI rules.
           </p>
         </div>
 
@@ -49,60 +59,17 @@ export default async function AdminDashboardPage() {
         </div>
       </div>
 
-      {/* ── 1. Users Table with Pagination & Actions ───────────────────────── */}
+      {/* ── 1. Urgent Cases & Clinical Escalations Queue ────────────────────── */}
+      <AdminUrgentCasesQueue initialCases={urgentCases} />
+
+      {/* ── 2. Users Table with Pagination & Role Management ───────────────── */}
       <AdminUsersManagement initialUsers={users} currentUserId={user.id} />
 
-      {/* ── 2. Duty Roster Visual Scheduler ─────────────────────────────────── */}
+      {/* ── 3. Doctor Duty Roster Visual Scheduler ─────────────────────────── */}
       <AdminDutyRosterScheduler initialShifts={shifts} doctors={doctors} />
 
-      {/* ── 3. Auxiliary System Management Panels ─────────────────────────── */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
-        {/* Triage Rules Engine Card */}
-        <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-white/10 rounded-2xl p-6 shadow-sm hover:border-primary/40 transition">
-          <div className="flex items-center justify-between mb-3">
-            <div className="w-10 h-10 rounded-xl bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 flex items-center justify-center">
-              <SlidersHorizontal className="w-5 h-5" />
-            </div>
-            <span className="text-xs px-2.5 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-semibold">
-              Live Engine
-            </span>
-          </div>
-          <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-1">Triage Rules Engine</h3>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mb-4">
-            Custom rules evaluated against incoming student symptoms to trigger urgent medical centre escalations.
-          </p>
-          <div className="flex items-baseline gap-2 mb-4">
-            <span className="text-3xl font-extrabold text-slate-900 dark:text-white">{rules.length || 0}</span>
-            <span className="text-xs text-slate-500">Active rules configured</span>
-          </div>
-          <div className="text-xs text-slate-400 bg-slate-50 dark:bg-slate-800/40 p-3 rounded-xl border border-slate-100 dark:border-white/[0.04]">
-            Rule parameters automatically protect students against persistent vomiting, prolonged fever, and clinical dehydration.
-          </div>
-        </div>
-
-        {/* Doctor Clinical Roster Card */}
-        <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-white/10 rounded-2xl p-6 shadow-sm hover:border-primary/40 transition">
-          <div className="flex items-center justify-between mb-3">
-            <div className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
-              <Stethoscope className="w-5 h-5" />
-            </div>
-            <span className="text-xs px-2.5 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 font-semibold">
-              Clinical Staff
-            </span>
-          </div>
-          <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-1">Doctor Roster & Clinics</h3>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mb-4">
-            Physicians assigned to consultation queues at the UNN Medical Centre.
-          </p>
-          <div className="flex items-baseline gap-2 mb-4">
-            <span className="text-3xl font-extrabold text-slate-900 dark:text-white">{doctors.length || 0}</span>
-            <span className="text-xs text-slate-500">Physicians registered in clinic database</span>
-          </div>
-          <div className="text-xs text-slate-400 bg-slate-50 dark:bg-slate-800/40 p-3 rounded-xl border border-slate-100 dark:border-white/[0.04]">
-            Promoting any user to Doctor in the table above automatically adds them to the clinical queue.
-          </div>
-        </div>
-      </div>
+      {/* ── 4. Interactive Triage Rules Configuration ─────────────────────── */}
+      <AdminTriageRulesManager initialRules={rules} />
     </div>
   );
 }

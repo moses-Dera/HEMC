@@ -124,6 +124,24 @@ def seed_db():
                     ))
             db.commit()
 
+        # --- 6. SAMPLE URGENT CASES ---
+        from app.modules.symptom_check.model import SymptomCheck, OutcomeEnum, CheckStatusEnum
+        if db.query(SymptomCheck).count() == 0:
+            student = db.query(User).filter(User.role == "student").first()
+            if student:
+                from datetime import datetime, timezone, timedelta
+                db.add(SymptomCheck(
+                    user_id=student.id,
+                    status=CheckStatusEnum.completed,
+                    fever_duration="4 days (> 3 days prolonged)",
+                    red_flags=["Persistent Vomiting", "Severe Dehydration"],
+                    outcome=OutcomeEnum.urgent,
+                    reviewed=False,
+                    contacted=False,
+                    timestamp=datetime.now(timezone.utc) - timedelta(minutes=35)
+                ))
+                db.commit()
+
         print("Database seeding completed successfully!")
     except Exception as e:
         print(f"Error seeding database: {e}")

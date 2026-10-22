@@ -98,6 +98,31 @@ class ChatService:
                 except Exception as notif_err:
                     print(f"Failed to create triage notification: {notif_err}")
 
+                # Persist to urgent symptom checks for Admin / Doctor escalation queue
+                try:
+                    from app.modules.symptom_check.model import SymptomCheck, OutcomeEnum, CheckStatusEnum
+                    from datetime import datetime, timezone
+                    flags = []
+                    if has_persistent_vomiting: flags.append("Persistent Vomiting")
+                    if has_dehydration: flags.append("Severe Dehydration")
+                    if has_confusion: flags.append("Confusion / Altered Mental State")
+                    if has_breathing_diff: flags.append("Difficulty Breathing")
+                    if has_seizure: flags.append("Convulsions / Seizure")
+                    if has_prolonged_fever: flags.append("Prolonged Fever (>3 Days)")
+
+                    urgent_check = SymptomCheck(
+                        user_id=user_id,
+                        status=CheckStatusEnum.completed,
+                        fever_duration="> 3 days" if has_prolonged_fever else "Immediate Red-Flag",
+                        red_flags=flags,
+                        outcome=OutcomeEnum.urgent,
+                        timestamp=datetime.now(timezone.utc)
+                    )
+                    self.db.add(urgent_check)
+                    self.db.commit()
+                except Exception as check_err:
+                    print(f"Failed to log urgent symptom check: {check_err}")
+
                 response_text = (
                     "**URGENT CLINICAL ALERT — PROCEED TO MEDICAL CENTRE**\n\n"
                     "Based on your reported symptoms (e.g. prolonged fever or red-flag emergency signs), this is evaluated as **URGENT**.\n\n"

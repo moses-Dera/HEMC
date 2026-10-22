@@ -133,3 +133,13 @@ export async function getDutyShifts() {
     return [];
   }
 }
+
+export async function getUrgentSymptomChecks() {
+  try {
+    const res = await apiFetch('/symptom-check/urgent');
+    if (!res.ok) return [];
+    return res.json();
+  } catch {
+    return [];
+  }
+}

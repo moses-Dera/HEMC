@@ -192,3 +192,122 @@ export async function adminDeleteDutyShiftAction(shiftId: number) {
     return { success: false, error: err.message || 'Network error' };
   }
 }
+
+// ── Triage Rules Server Actions ──────────────────────────────────────────────
+
+export interface TriageRuleData {
+  rule_id?: number;
+  condition_type: 'red_flag' | 'duration_threshold';
+  label: string;
+  value?: string | null;
+  outcome: 'urgent' | 'book' | 'self_care';
+  active: boolean;
+  updated_at?: string;
+}
+
+export async function adminCreateTriageRuleAction(ruleData: {
+  condition_type: 'red_flag' | 'duration_threshold';
+  label: string;
+  value?: string;
+  outcome: 'urgent' | 'book' | 'self_care';
+  active?: boolean;
+}) {
+  try {
+    const res = await apiFetch('/triage-rules/', {
+      method: 'POST',
+      body: JSON.stringify(ruleData),
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      return { success: false, error: data.detail || 'Failed to create triage rule' };
+    }
+    revalidatePath('/admin/dashboard');
+    return { success: true, rule: data };
+  } catch (err: any) {
+    return { success: false, error: err.message || 'Network error' };
+  }
+}
+
+export async function adminUpdateTriageRuleAction(
+  ruleId: number,
+  ruleData: {
+    condition_type?: 'red_flag' | 'duration_threshold';
+    label?: string;
+    value?: string;
+    outcome?: 'urgent' | 'book' | 'self_care';
+    active?: boolean;
+  }
+) {
+  try {
+    const res = await apiFetch(`/triage-rules/${ruleId}`, {
+      method: 'PATCH',
+      body: JSON.stringify(ruleData),
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      return { success: false, error: data.detail || 'Failed to update triage rule' };
+    }
+    revalidatePath('/admin/dashboard');
+    return { success: true, rule: data };
+  } catch (err: any) {
+    return { success: false, error: err.message || 'Network error' };
+  }
+}
+
+export async function adminDeleteTriageRuleAction(ruleId: number) {
+  try {
+    const res = await apiFetch(`/triage-rules/${ruleId}`, {
+      method: 'DELETE',
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      return { success: false, error: data.detail || 'Failed to delete triage rule' };
+    }
+    revalidatePath('/admin/dashboard');
+    return { success: true };
+  } catch (err: any) {
+    return { success: false, error: err.message || 'Network error' };
+  }
+}
+
+// ── Urgent Cases Server Actions ──────────────────────────────────────────────
+
+export interface AdminUrgentCheckData {
+  check_id: number;
+  user_id: number;
+  patient_name: string;
+  patient_email: string;
+  patient_phone?: string | null;
+  patient_reg_number?: string | null;
+  patient_department?: string | null;
+  patient_level?: string | null;
+  patient_hostel?: string | null;
+  patient_emergency_contact?: string | null;
+  fever_duration?: string | null;
+  red_flags?: string[] | null;
+  outcome: string;
+  reviewed: boolean;
+  contacted: boolean;
+  reviewed_at?: string | null;
+  timestamp: string;
+}
+
+export async function adminUpdateUrgentCheckStatusAction(
+  checkId: number,
+  data: { reviewed?: boolean; contacted?: boolean }
+) {
+  try {
+    const res = await apiFetch(`/symptom-check/${checkId}/status`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    });
+    const resData = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      return { success: false, error: resData.detail || 'Failed to update urgent case status' };
+    }
+    revalidatePath('/admin/dashboard');
+    return { success: true };
+  } catch (err: any) {
+    return { success: false, error: err.message || 'Network error' };
+  }
+}

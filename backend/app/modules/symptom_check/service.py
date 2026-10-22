@@ -51,3 +51,61 @@ class SymptomCheckService:
                 print(f"Failed to create triage notification: {e}")
 
         return updated
+
+    def get_urgent_checks(self):
+        from app.modules.users.model import User
+        from .model import OutcomeEnum, SymptomCheck
+        
+        checks = self.repo.db.query(SymptomCheck).filter(
+            (SymptomCheck.outcome == OutcomeEnum.urgent) | (SymptomCheck.outcome == "urgent")
+        ).order_by(SymptomCheck.timestamp.desc()).all()
+
+        results = []
+        for c in checks:
+            user = self.repo.db.query(User).filter(User.id == c.user_id).first()
+            outcome_str = c.outcome.value if hasattr(c.outcome, "value") else str(c.outcome)
+            
+            raw_flags = c.red_flags
+            flags_list = []
+            if isinstance(raw_flags, list):
+                flags_list = raw_flags
+            elif isinstance(raw_flags, dict):
+                flags_list = list(raw_flags.keys())
+            elif isinstance(raw_flags, str):
+                flags_list = [raw_flags]
+
+            results.append({
+                "check_id": c.check_id,
+                "user_id": c.user_id,
+                "patient_name": user.name if user else "Student Patient",
+                "patient_email": user.email if user else "",
+                "patient_phone": getattr(user, "phone_number", None),
+                "patient_reg_number": getattr(user, "reg_number", None),
+                "patient_department": getattr(user, "department", None),
+                "patient_level": getattr(user, "level", None),
+                "patient_hostel": getattr(user, "hostel", None),
+                "patient_emergency_contact": getattr(user, "emergency_contact", None),
+                "fever_duration": c.fever_duration,
+                "red_flags": flags_list,
+                "outcome": outcome_str,
+                "reviewed": bool(c.reviewed),
+                "contacted": bool(c.contacted),
+                "reviewed_at": c.reviewed_at,
+                "timestamp": c.timestamp
+            })
+        return results
+
+    def update_status(self, check_id: int, req: dict, admin_id: int):
+        from datetime import datetime, timezone
+        check = self.repo.get_by_id(check_id)
+        if not check:
+            raise ValueError("Symptom check not found")
+        if "reviewed" in req and req["reviewed"] is not None:
+            check.reviewed = bool(req["reviewed"])
+            check.reviewed_by = admin_id
+            check.reviewed_at = datetime.now(timezone.utc) if check.reviewed else None
+        if "contacted" in req and req["contacted"] is not None:
+            check.contacted = bool(req["contacted"])
+        self.repo.db.commit()
+        self.repo.db.refresh(check)
+        return {"success": True, "check_id": check_id, "reviewed": check.reviewed, "contacted": check.contacted}
