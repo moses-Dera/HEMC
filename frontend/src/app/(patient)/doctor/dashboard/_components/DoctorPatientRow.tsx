@@ -1,32 +1,8 @@
 'use client';
 
 import React from 'react';
-import { Check, CheckCircle, FileText, ArrowRightLeft } from 'lucide-react';
-
-interface PatientAssignment {
-  assignment_id: number;
-  appointment_id: number;
-  doctor_id: number;
-  assigned_at: string;
-  status: string;
-  patient_id?: number;
-  patient_name?: string;
-  patient_email?: string;
-  patient_department?: string;
-  patient_level?: string;
-  patient_reg_number?: string;
-  patient_phone?: string;
-  patient_blood_group?: string;
-  patient_genotype?: string;
-  patient_allergies?: string;
-  patient_hostel?: string;
-  appointment_date?: string;
-  appointment_status?: string;
-  triage_urgency?: string;
-  triage_summary?: string;
-  prescription?: string;
-  clinical_notes?: string;
-}
+import { Check, CheckCircle, FileText, ArrowRightLeft, Eye } from 'lucide-react';
+import { PatientAssignment } from '../types';
 
 interface DoctorPatientRowProps {
   patient: PatientAssignment;
@@ -35,6 +11,7 @@ interface DoctorPatientRowProps {
   onOpenConsultationModal: (patient: PatientAssignment) => void;
   onViewSlip: (patient: PatientAssignment) => void;
   onOpenHandoverModal: (patient: PatientAssignment) => void;
+  onSelectPatient: (patient: PatientAssignment) => void;
 }
 
 export default function DoctorPatientRow({
@@ -44,17 +21,25 @@ export default function DoctorPatientRow({
   onOpenConsultationModal,
   onViewSlip,
   onOpenHandoverModal,
+  onSelectPatient,
 }: DoctorPatientRowProps) {
   return (
-    <tr className="hover:bg-slate-50/70 dark:hover:bg-slate-800/30 transition-colors">
+    <tr className="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors group">
       {/* Patient Info */}
-      <td className="px-5 py-4">
+      <td
+        className="px-5 py-4 cursor-pointer"
+        onClick={() => onSelectPatient(p)}
+        title="Click to view AI clinical dossier & triage details"
+      >
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-300 flex items-center justify-center font-bold text-xs">
+          <div className="w-9 h-9 rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-300 flex items-center justify-center font-bold text-xs ring-2 ring-transparent group-hover:ring-blue-500/30 transition">
             {p.patient_name ? p.patient_name.slice(0, 2).toUpperCase() : 'ST'}
           </div>
           <div>
-            <div className="font-semibold text-slate-800 dark:text-slate-100">{p.patient_name}</div>
+            <div className="font-semibold text-slate-800 dark:text-slate-100 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors flex items-center gap-1.5">
+              <span>{p.patient_name}</span>
+              <Eye className="w-3.5 h-3.5 text-slate-400 group-hover:text-emerald-500 transition opacity-0 group-hover:opacity-100" />
+            </div>
             <div className="text-xs text-slate-400">{p.patient_email}</div>
           </div>
         </div>

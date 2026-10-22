@@ -16,62 +16,8 @@ import DoctorPatientRow from './_components/DoctorPatientRow';
 import DoctorPatientMobileCard from './_components/DoctorPatientMobileCard';
 import DoctorHandoverModal from './_components/DoctorHandoverModal';
 import DoctorConsultationModal from './_components/DoctorConsultationModal';
-
-interface DoctorShift {
-  shift_id: number;
-  doctor_id: number;
-  shift_date: string;
-  start_time: string;
-  end_time: string;
-  status: string;
-}
-
-interface DoctorOverview {
-  doctor_id: number;
-  user_id: number;
-  name: string;
-  email: string;
-  specialization: string;
-  is_available: boolean;
-  total_assigned: number;
-  pending_count: number;
-  confirmed_count: number;
-  completed_count: number;
-  shifts: DoctorShift[];
-}
-
-interface PatientAssignment {
-  assignment_id: number;
-  appointment_id: number;
-  doctor_id: number;
-  assigned_at: string;
-  status: string;
-  patient_id?: number;
-  patient_name?: string;
-  patient_email?: string;
-  patient_department?: string;
-  patient_level?: string;
-  patient_reg_number?: string;
-  patient_phone?: string;
-  patient_blood_group?: string;
-  patient_genotype?: string;
-  patient_allergies?: string;
-  patient_hostel?: string;
-  appointment_date?: string;
-  appointment_status?: string;
-  triage_urgency?: string;
-  triage_summary?: string;
-  prescription?: string;
-  clinical_notes?: string;
-}
-
-interface ColleagueDoctor {
-  doctor_id: number;
-  user_id: number;
-  name?: string;
-  specialization?: string;
-  is_available: boolean;
-}
+import DoctorPatientDetailsModal from './_components/DoctorPatientDetailsModal';
+import { DoctorOverview, PatientAssignment, ColleagueDoctor } from './types';
 
 interface DoctorDashboardClientProps {
   initialOverview: DoctorOverview | null;
@@ -93,6 +39,9 @@ export default function DoctorDashboardClient({
 
   // Prescription & Consultation Modal State
   const [consultationPatient, setConsultationPatient] = useState<PatientAssignment | null>(null);
+
+  // Patient AI Dossier & Details Modal State
+  const [selectedPatientDetails, setSelectedPatientDetails] = useState<PatientAssignment | null>(null);
 
   // Official Clinic Slip Viewer State
   const [viewSlipPatient, setViewSlipPatient] = useState<PatientAssignment | null>(null);
@@ -334,6 +283,7 @@ export default function DoctorDashboardClient({
                 onOpenConsultationModal={setConsultationPatient}
                 onViewSlip={setViewSlipPatient}
                 onOpenHandoverModal={setHandoverPatient}
+                onSelectPatient={setSelectedPatientDetails}
               />
             ))
           )}
@@ -371,6 +321,7 @@ export default function DoctorDashboardClient({
                     onOpenConsultationModal={setConsultationPatient}
                     onViewSlip={setViewSlipPatient}
                     onOpenHandoverModal={setHandoverPatient}
+                    onSelectPatient={setSelectedPatientDetails}
                   />
                 ))
               )}
@@ -379,7 +330,26 @@ export default function DoctorDashboardClient({
         </div>
       </div>
 
-      {/* ── 5. Case Referral / Handover Modal ── */}
+      {/* ── 5. AI Clinical Dossier & Patient Details Modal ── */}
+      <DoctorPatientDetailsModal
+        patient={selectedPatientDetails}
+        doctorName={overview?.name}
+        onClose={() => setSelectedPatientDetails(null)}
+        onOpenConsultationModal={(p) => {
+          setSelectedPatientDetails(null);
+          setConsultationPatient(p);
+        }}
+        onViewSlip={(p) => {
+          setSelectedPatientDetails(null);
+          setViewSlipPatient(p);
+        }}
+        onOpenHandoverModal={(p) => {
+          setSelectedPatientDetails(null);
+          setHandoverPatient(p);
+        }}
+      />
+
+      {/* ── 6. Case Referral / Handover Modal ── */}
       <DoctorHandoverModal
         patient={handoverPatient}
         availableColleagues={availableColleagues}
@@ -388,7 +358,7 @@ export default function DoctorDashboardClient({
         isSubmitting={isSubmitting}
       />
 
-      {/* ── 6. Clinical Consultation & Prescription Modal ── */}
+      {/* ── 7. Clinical Consultation & Prescription Modal ── */}
       <DoctorConsultationModal
         patient={consultationPatient}
         onClose={() => setConsultationPatient(null)}
@@ -396,7 +366,7 @@ export default function DoctorDashboardClient({
         isSubmitting={isSubmitting}
       />
 
-      {/* ── 7. Official Clinic Slip Modal ── */}
+      {/* ── 8. Official Clinic Slip Modal ── */}
       <ClinicSlipModal
         isOpen={!!viewSlipPatient}
         onClose={() => setViewSlipPatient(null)}

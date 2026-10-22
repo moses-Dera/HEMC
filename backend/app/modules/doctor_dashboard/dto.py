@@ -25,6 +25,10 @@ class PatientAssignmentResponse(BaseModel):
     appointment_status: Optional[str] = None
     triage_urgency: Optional[str] = "Routine"
     triage_summary: Optional[str] = None
+    red_flags: Optional[List[str]] = None
+    fever_duration: Optional[str] = None
+    recent_chat_messages: Optional[List[dict]] = None
+    symptom_check_id: Optional[int] = None
     prescription: Optional[str] = None
     clinical_notes: Optional[str] = None
     

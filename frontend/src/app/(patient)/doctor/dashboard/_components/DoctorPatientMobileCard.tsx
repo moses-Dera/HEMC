@@ -1,32 +1,8 @@
 'use client';
 
 import React from 'react';
-import { Check, CheckCircle, FileText, ArrowRightLeft } from 'lucide-react';
-
-interface PatientAssignment {
-  assignment_id: number;
-  appointment_id: number;
-  doctor_id: number;
-  assigned_at: string;
-  status: string;
-  patient_id?: number;
-  patient_name?: string;
-  patient_email?: string;
-  patient_department?: string;
-  patient_level?: string;
-  patient_reg_number?: string;
-  patient_phone?: string;
-  patient_blood_group?: string;
-  patient_genotype?: string;
-  patient_allergies?: string;
-  patient_hostel?: string;
-  appointment_date?: string;
-  appointment_status?: string;
-  triage_urgency?: string;
-  triage_summary?: string;
-  prescription?: string;
-  clinical_notes?: string;
-}
+import { Check, CheckCircle, FileText, ArrowRightLeft, Eye } from 'lucide-react';
+import { PatientAssignment } from '../types';
 
 interface DoctorPatientMobileCardProps {
   patient: PatientAssignment;
@@ -35,6 +11,7 @@ interface DoctorPatientMobileCardProps {
   onOpenConsultationModal: (patient: PatientAssignment) => void;
   onViewSlip: (patient: PatientAssignment) => void;
   onOpenHandoverModal: (patient: PatientAssignment) => void;
+  onSelectPatient: (patient: PatientAssignment) => void;
 }
 
 export default function DoctorPatientMobileCard({
@@ -44,16 +21,26 @@ export default function DoctorPatientMobileCard({
   onOpenConsultationModal,
   onViewSlip,
   onOpenHandoverModal,
+  onSelectPatient,
 }: DoctorPatientMobileCardProps) {
   return (
     <div className="p-4 space-y-3">
       <div className="flex items-start justify-between">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-300 flex items-center justify-center font-bold text-sm">
+        <div
+          className="flex items-center gap-3 cursor-pointer group"
+          onClick={() => onSelectPatient(p)}
+          title="Click to view AI clinical dossier"
+        >
+          <div className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-300 flex items-center justify-center font-bold text-sm ring-2 ring-transparent group-hover:ring-blue-500/30 transition">
             {p.patient_name ? p.patient_name.slice(0, 2).toUpperCase() : 'ST'}
           </div>
           <div>
-            <h4 className="font-bold text-sm text-slate-900 dark:text-white">{p.patient_name}</h4>
+            <div className="flex items-center gap-1.5">
+              <h4 className="font-bold text-sm text-slate-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
+                {p.patient_name}
+              </h4>
+              <Eye className="w-3.5 h-3.5 text-slate-400 group-hover:text-emerald-500 transition" />
+            </div>
             <div className="text-xs text-slate-400">{p.patient_email}</div>
           </div>
         </div>

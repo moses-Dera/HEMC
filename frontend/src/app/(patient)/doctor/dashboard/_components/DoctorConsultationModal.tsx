@@ -26,23 +26,7 @@ export const PRESET_PROTOCOLS = [
   },
 ];
 
-interface PatientAssignment {
-  assignment_id: number;
-  appointment_id: number;
-  doctor_id: number;
-  patient_id?: number;
-  patient_name?: string;
-  patient_reg_number?: string;
-  patient_department?: string;
-  patient_level?: string;
-  patient_blood_group?: string;
-  patient_genotype?: string;
-  patient_hostel?: string;
-  patient_phone?: string;
-  patient_allergies?: string;
-  clinical_notes?: string;
-  prescription?: string;
-}
+import { PatientAssignment } from '../types';
 
 interface DoctorConsultationModalProps {
   patient: PatientAssignment | null;

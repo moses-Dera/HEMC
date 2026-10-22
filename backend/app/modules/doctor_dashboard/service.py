@@ -14,6 +14,8 @@ from app.modules.doctors.models.duty_shift import DutyShift
 from app.modules.appointments.model import Appointment, AppointmentStatusEnum
 from app.modules.users.model import User
 from app.modules.symptom_check.model import SymptomCheck
+from app.modules.chat.models.chat_session import ChatSession
+from app.modules.chat.models.chat_message import ChatMessage
 from .models.patient_assignment import PatientAssignment
 
 class DashboardService:
@@ -44,19 +46,49 @@ class DashboardService:
             
             # Check for latest symptom triage check
             latest_check = None
+            red_flags_list = []
+            fever_duration_val = None
+            check_id_val = None
+
             if patient:
                 latest_check = self.db.query(SymptomCheck).filter(
                     SymptomCheck.user_id == patient.id
                 ).order_by(SymptomCheck.timestamp.desc()).first()
 
+            if latest_check:
+                check_id_val = latest_check.check_id
+                fever_duration_val = latest_check.fever_duration
+                if latest_check.red_flags:
+                    red_flags_list = latest_check.red_flags if isinstance(latest_check.red_flags, list) else [str(latest_check.red_flags)]
+
             is_urgent = False
             if latest_check:
                 outcome_val = latest_check.outcome.value if hasattr(latest_check.outcome, "value") else str(latest_check.outcome)
-                if outcome_val == "urgent" or (latest_check.red_flags and len(latest_check.red_flags) > 0):
+                if outcome_val == "urgent" or (red_flags_list and len(red_flags_list) > 0):
                     is_urgent = True
 
             triage_urgency = "Urgent / Emergency" if is_urgent else "Routine Consultation"
             triage_summary = f"Fever: {latest_check.fever_duration}" if (latest_check and latest_check.fever_duration) else "Clinical consultation booking"
+
+            # Fetch recent AI chat messages for clinical context
+            recent_chat_messages = []
+            if patient:
+                latest_session = self.db.query(ChatSession).filter(
+                    ChatSession.user_id == patient.id
+                ).order_by(ChatSession.created_at.desc()).first()
+
+                if latest_session:
+                    msgs = self.db.query(ChatMessage).filter(
+                        ChatMessage.session_id == latest_session.session_id
+                    ).order_by(ChatMessage.created_at.asc()).limit(15).all()
+
+                    for m in msgs:
+                        role_str = m.role.value if hasattr(m.role, "value") else str(m.role)
+                        recent_chat_messages.append({
+                            "role": role_str,
+                            "content": m.content,
+                            "time": m.created_at.strftime("%I:%M %p") if m.created_at else ""
+                        })
 
             appt_status = appt.status.value if (appt and hasattr(appt.status, "value")) else (str(appt.status) if appt else "pending")
 
@@ -83,6 +115,10 @@ class DashboardService:
                     appointment_status=appt_status,
                     triage_urgency=triage_urgency,
                     triage_summary=triage_summary,
+                    red_flags=red_flags_list,
+                    fever_duration=fever_duration_val,
+                    recent_chat_messages=recent_chat_messages,
+                    symptom_check_id=check_id_val,
                     prescription=appt.prescription if appt else None,
                     clinical_notes=appt.clinical_notes if appt else None,
                 )

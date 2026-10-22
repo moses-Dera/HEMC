@@ -70,3 +70,24 @@ export async function requestPatientHandoverAction(assignmentId: number, toDocto
     return { success: false, error: err.message || 'Network error' };
   }
 }
+
+export async function sendDoctorEmailAction(toEmail: string, subject: string, body: string) {
+  try {
+    const res = await apiFetch('/notifications/send-email', {
+      method: 'POST',
+      body: JSON.stringify({
+        to_email: toEmail,
+        subject,
+        body,
+      }),
+    });
+    const data = await res.json();
+    if (!res.ok || !data.ok) {
+      return { success: false, error: data.detail || 'Failed to dispatch email' };
+    }
+    return { success: true };
+  } catch (err: any) {
+    return { success: false, error: err.message || 'Network error sending email' };
+  }
+}
+

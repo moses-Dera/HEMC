@@ -5,17 +5,16 @@ from typing import List
 from .dto import EmailRequest, NotificationResponse
 from .service import NotificationService
 from .repository import NotificationRepository
-from app.modules.auth.dependencies import require_admin, get_current_user
+from app.modules.auth.dependencies import require_admin, require_doctor, get_current_user
 from app.core.db import get_db
 from app.modules.users.model import User
 
-# This router has different dependencies per endpoint now
 router = APIRouter()
 
 def get_notification_service():
     return NotificationService()
 
-@router.post("/send-email", dependencies=[Depends(require_admin)])
+@router.post("/send-email", dependencies=[Depends(require_doctor)])
 def send_email(req: EmailRequest, service: NotificationService = Depends(get_notification_service)):
     success = service.send_email(req.to_email, req.subject, req.body)
     return {"ok": success}

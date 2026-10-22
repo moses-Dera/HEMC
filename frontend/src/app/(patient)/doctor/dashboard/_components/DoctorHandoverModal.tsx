@@ -4,23 +4,7 @@ import React, { useState } from 'react';
 import { ArrowRightLeft, X } from 'lucide-react';
 import { toast } from 'sonner';
 
-interface ColleagueDoctor {
-  doctor_id: number;
-  user_id: number;
-  name?: string;
-  specialization?: string;
-  is_available: boolean;
-}
-
-interface PatientAssignment {
-  assignment_id: number;
-  appointment_id: number;
-  doctor_id: number;
-  patient_id?: number;
-  patient_name?: string;
-  patient_reg_number?: string;
-  patient_department?: string;
-}
+import { ColleagueDoctor, PatientAssignment } from '../types';
 
 interface DoctorHandoverModalProps {
   patient: PatientAssignment | null;
