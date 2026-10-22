@@ -4,6 +4,7 @@ import {
   getAdminUsers, 
   getDutyShifts, 
   getUrgentSymptomChecks, 
+  getAllAppointments,
   getMe 
 } from '@/lib/api';
 import { redirect } from 'next/navigation';
@@ -17,12 +18,13 @@ export default async function AdminDashboardPage() {
     redirect('/dashboard');
   }
 
-  const [rules, doctors, users, shifts, urgentCases] = await Promise.all([
+  const [rules, doctors, users, shifts, urgentCases, appointments] = await Promise.all([
     getTriageRules(),
     getDoctors(),
     getAdminUsers(),
     getDutyShifts(),
     getUrgentSymptomChecks(),
+    getAllAppointments(),
   ]);
 
   return (
@@ -64,6 +66,7 @@ export default async function AdminDashboardPage() {
         shifts={shifts}
         doctors={doctors}
         rules={rules}
+        appointments={appointments}
       />
     </div>
   );

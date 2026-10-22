@@ -12,7 +12,8 @@ import AdminUrgentCasesQueue from './AdminUrgentCasesQueue';
 import AdminUsersManagement from './AdminUsersManagement';
 import AdminDutyRosterScheduler from './AdminDutyRosterScheduler';
 import AdminTriageRulesManager from './AdminTriageRulesManager';
-import { TriageRuleData, AdminUserData, DutyShiftData, AdminUrgentCheckData } from '@/app/actions/admin';
+import AdminAppointmentsManager from './AdminAppointmentsManager';
+import { TriageRuleData, AdminUserData, DutyShiftData, AdminUrgentCheckData, AdminAppointmentData } from '@/app/actions/admin';
 
 interface DoctorOption {
   doctor_id: number;
@@ -30,9 +31,10 @@ interface AdminDashboardTabsProps {
   shifts: DutyShiftData[];
   doctors: DoctorOption[];
   rules: TriageRuleData[];
+  appointments: AdminAppointmentData[];
 }
 
-type TabType = 'overview' | 'urgent' | 'users' | 'roster' | 'triage';
+type TabType = 'overview' | 'urgent' | 'appointments' | 'users' | 'roster' | 'triage';
 
 export default function AdminDashboardTabs({
   urgentCases,
@@ -41,11 +43,16 @@ export default function AdminDashboardTabs({
   shifts,
   doctors,
   rules,
+  appointments,
 }: AdminDashboardTabsProps) {
   const [activeTab, setActiveTab] = useState<TabType>('overview');
 
   const pendingUrgentCount = urgentCases.filter(
     (c) => !c.contacted || !c.reviewed
+  ).length;
+
+  const pendingAppointmentsCount = appointments.filter(
+    (a) => a.status === 'pending'
   ).length;
 
   const tabs = [
@@ -61,6 +68,13 @@ export default function AdminDashboardTabs({
       icon: ShieldAlert,
       badge: pendingUrgentCount > 0 ? pendingUrgentCount : null,
       badgeColor: 'bg-red-500 text-white',
+    },
+    {
+      id: 'appointments' as TabType,
+      label: 'Clinic Bookings',
+      icon: Calendar,
+      badge: pendingAppointmentsCount > 0 ? pendingAppointmentsCount : appointments.length,
+      badgeColor: pendingAppointmentsCount > 0 ? 'bg-amber-500 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300',
     },
     {
       id: 'users' as TabType,
@@ -121,10 +135,17 @@ export default function AdminDashboardTabs({
       {/* ── Tab Views ────────────────────────────────────────────────────── */}
       {activeTab === 'overview' && (
         <div className="space-y-8 animate-in fade-in duration-200">
+          <AdminAppointmentsManager initialAppointments={appointments} doctors={doctors} />
           <AdminUrgentCasesQueue initialCases={urgentCases} />
           <AdminUsersManagement initialUsers={users} currentUserId={currentUserId} />
           <AdminDutyRosterScheduler initialShifts={shifts} doctors={doctors} />
           <AdminTriageRulesManager initialRules={rules} />
+        </div>
+      )}
+
+      {activeTab === 'appointments' && (
+        <div className="animate-in fade-in duration-200">
+          <AdminAppointmentsManager initialAppointments={appointments} doctors={doctors} />
         </div>
       )}
 

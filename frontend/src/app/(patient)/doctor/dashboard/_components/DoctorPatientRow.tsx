@@ -12,6 +12,7 @@ interface DoctorPatientRowProps {
   onViewSlip: (patient: PatientAssignment) => void;
   onOpenHandoverModal: (patient: PatientAssignment) => void;
   onSelectPatient: (patient: PatientAssignment) => void;
+  onConfirmClick?: (patient: PatientAssignment) => void;
 }
 
 export default function DoctorPatientRow({
@@ -22,6 +23,7 @@ export default function DoctorPatientRow({
   onViewSlip,
   onOpenHandoverModal,
   onSelectPatient,
+  onConfirmClick,
 }: DoctorPatientRowProps) {
   return (
     <tr className="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors group">
@@ -108,7 +110,7 @@ export default function DoctorPatientRow({
         <div className="flex items-center justify-end gap-2">
           {p.appointment_status !== 'confirmed' && p.appointment_status !== 'completed' && (
             <button
-              onClick={() => onUpdateStatus(p.appointment_id, 'confirmed')}
+              onClick={() => (onConfirmClick ? onConfirmClick(p) : onUpdateStatus(p.appointment_id, 'confirmed'))}
               disabled={isSubmitting}
               className="px-2.5 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold flex items-center gap-1 transition shadow-xs cursor-pointer"
             >

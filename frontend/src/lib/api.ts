@@ -68,6 +68,16 @@ export async function getMyAppointments() {
   }
 }
 
+export async function getAllAppointments() {
+  try {
+    const res = await apiFetch('/appointments/all');
+    if (!res.ok) return [];
+    return res.json();
+  } catch {
+    return [];
+  }
+}
+
 // ── Doctors ──────────────────────────────────────────────────────────────────
 
 export async function getDoctors() {

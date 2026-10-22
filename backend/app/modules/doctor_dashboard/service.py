@@ -192,11 +192,17 @@ class DashboardService:
         if req.clinical_notes is not None:
             appt.clinical_notes = req.clinical_notes
 
+        from .models.patient_assignment import AssignmentStatusEnum
+        asgn = self.db.query(PatientAssignment).filter(PatientAssignment.appointment_id == appt.appointment_id).first()
+        if asgn and req.status.lower() in ("completed", "cancelled"):
+            asgn.status = AssignmentStatusEnum.completed
+
         self.db.commit()
         self.db.refresh(appt)
 
-        # Notify student
+        # Notify student in-app and background email
         try:
+            import threading
             from app.modules.notifications.service import NotificationService
             from app.modules.notifications.repository import NotificationRepository
             
@@ -210,18 +216,25 @@ class DashboardService:
                     user_id=student.id,
                     title=f"Appointment {req.status.capitalize()}",
                     message=f"{doc_name} marked your appointment as {req.status.upper()}.",
-                    link="/history"
+                    link="/history?tab=appointments"
                 )
                 
                 if student.email:
-                    notifier = NotificationService()
-                    notifier.notify_appointment_status(
-                        email=student.email,
-                        name=student.name,
-                        date=appt.appointment_date.strftime("%b %d, %Y at %I:%M %p") if hasattr(appt.appointment_date, "strftime") else str(appt.appointment_date),
-                        status=req.status.capitalize(),
-                        doctor_name=doc_name
-                    )
+                    date_str = appt.appointment_date.strftime("%b %d, %Y at %I:%M %p") if hasattr(appt.appointment_date, "strftime") else str(appt.appointment_date)
+                    status_str = req.status.capitalize()
+                    def _send_doctor_status_email():
+                        try:
+                            notifier = NotificationService()
+                            notifier.notify_appointment_status(
+                                email=student.email,
+                                name=student.name,
+                                date=date_str,
+                                status=status_str,
+                                doctor_name=doc_name
+                            )
+                        except Exception as err:
+                            print(f"Background email error: {err}")
+                    threading.Thread(target=_send_doctor_status_email, daemon=True).start()
         except Exception as e:
             print(f"Failed to send appointment status notification: {e}")
 

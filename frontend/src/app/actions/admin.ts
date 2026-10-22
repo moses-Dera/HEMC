@@ -311,3 +311,44 @@ export async function adminUpdateUrgentCheckStatusAction(
     return { success: false, error: err.message || 'Network error' };
   }
 }
+
+export interface AdminAppointmentData {
+  appointment_id: number;
+  user_id: number;
+  appointment_date: string;
+  status: string;
+  prescription?: string | null;
+  clinical_notes?: string | null;
+  doctor_id?: number | null;
+  doctor_name?: string | null;
+  doctor_specialization?: string | null;
+  patient_name?: string | null;
+  patient_email?: string | null;
+  patient_reg_number?: string | null;
+  patient_department?: string | null;
+  patient_phone?: string | null;
+  created_at: string;
+}
+
+export async function adminUpdateAppointmentAction(
+  appointmentId: number,
+  data: { status?: string; doctor_id?: number }
+) {
+  try {
+    const res = await apiFetch(`/appointments/${appointmentId}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    });
+    const resData = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      return { success: false, error: resData.detail || 'Failed to update appointment' };
+    }
+    revalidatePath('/admin/dashboard');
+    revalidatePath('/doctor/dashboard');
+    revalidatePath('/dashboard');
+    revalidatePath('/history');
+    return { success: true, data: resData };
+  } catch (err: any) {
+    return { success: false, error: err.message || 'Network error' };
+  }
+}

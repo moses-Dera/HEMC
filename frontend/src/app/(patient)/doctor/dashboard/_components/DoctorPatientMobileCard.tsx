@@ -12,6 +12,7 @@ interface DoctorPatientMobileCardProps {
   onViewSlip: (patient: PatientAssignment) => void;
   onOpenHandoverModal: (patient: PatientAssignment) => void;
   onSelectPatient: (patient: PatientAssignment) => void;
+  onConfirmClick?: (patient: PatientAssignment) => void;
 }
 
 export default function DoctorPatientMobileCard({
@@ -22,6 +23,7 @@ export default function DoctorPatientMobileCard({
   onViewSlip,
   onOpenHandoverModal,
   onSelectPatient,
+  onConfirmClick,
 }: DoctorPatientMobileCardProps) {
   return (
     <div className="p-4 space-y-3">
@@ -118,7 +120,7 @@ export default function DoctorPatientMobileCard({
       <div className="flex items-center gap-2 pt-1">
         {p.appointment_status !== 'confirmed' && p.appointment_status !== 'completed' && (
           <button
-            onClick={() => onUpdateStatus(p.appointment_id, 'confirmed')}
+            onClick={() => (onConfirmClick ? onConfirmClick(p) : onUpdateStatus(p.appointment_id, 'confirmed'))}
             disabled={isSubmitting}
             className="flex-1 py-1.5 px-3 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold flex items-center justify-center gap-1 transition shadow-xs cursor-pointer"
           >

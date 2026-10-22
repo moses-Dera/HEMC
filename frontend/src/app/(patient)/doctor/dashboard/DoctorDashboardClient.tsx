@@ -9,6 +9,7 @@ import {
   requestPatientHandoverAction,
 } from '@/app/actions/doctor';
 import ClinicSlipModal from '@/components/ClinicSlipModal';
+import AppointmentConfirmModal from '@/components/AppointmentConfirmModal';
 import DoctorHeader from './_components/DoctorHeader';
 import DoctorKPICards from './_components/DoctorKPICards';
 import DoctorDutyRosterCard from './_components/DoctorDutyRosterCard';
@@ -36,6 +37,9 @@ export default function DoctorDashboardClient({
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'confirmed' | 'completed'>('all');
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Appointment Confirmation Modal State
+  const [confirmingPatient, setConfirmingPatient] = useState<PatientAssignment | null>(null);
 
   // Prescription & Consultation Modal State
   const [consultationPatient, setConsultationPatient] = useState<PatientAssignment | null>(null);
@@ -284,6 +288,7 @@ export default function DoctorDashboardClient({
                 onViewSlip={setViewSlipPatient}
                 onOpenHandoverModal={setHandoverPatient}
                 onSelectPatient={setSelectedPatientDetails}
+                onConfirmClick={setConfirmingPatient}
               />
             ))
           )}
@@ -322,6 +327,7 @@ export default function DoctorDashboardClient({
                     onViewSlip={setViewSlipPatient}
                     onOpenHandoverModal={setHandoverPatient}
                     onSelectPatient={setSelectedPatientDetails}
+                    onConfirmClick={setConfirmingPatient}
                   />
                 ))
               )}
@@ -392,6 +398,33 @@ export default function DoctorDashboardClient({
               }
             : null
         }
+      />
+
+      {/* ── 9. Official Appointment Confirmation Modal ── */}
+      <AppointmentConfirmModal
+        isOpen={!!confirmingPatient}
+        onClose={() => setConfirmingPatient(null)}
+        onConfirm={async () => {
+          if (confirmingPatient) {
+            await handleUpdateStatus(confirmingPatient.appointment_id, 'confirmed');
+            setConfirmingPatient(null);
+          }
+        }}
+        appointment={
+          confirmingPatient
+            ? {
+                appointmentId: confirmingPatient.appointment_id,
+                patientName: confirmingPatient.patient_name,
+                patientEmail: confirmingPatient.patient_email,
+                patientRegNumber: confirmingPatient.patient_reg_number,
+                patientDepartment: confirmingPatient.patient_department,
+                appointmentDate: confirmingPatient.appointment_date || new Date().toISOString(),
+                doctorName: overview?.name ? `Dr. ${overview.name}` : undefined,
+                doctorId: overview?.doctor_id,
+              }
+            : null
+        }
+        allowDoctorChange={false}
       />
     </div>
   );
