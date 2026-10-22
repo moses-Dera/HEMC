@@ -13,12 +13,14 @@ export async function sendChatMessage(content: string) {
   }
 
   try {
+    const signal = typeof AbortSignal !== 'undefined' && AbortSignal.timeout ? AbortSignal.timeout(20000) : undefined;
     const res = await fetch(`${API_URL}/chat/message`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Cookie': `access_token=${accessToken}`,
       },
+      signal,
       body: JSON.stringify({ content }),
       cache: 'no-store',
     });
@@ -31,6 +33,9 @@ export async function sendChatMessage(content: string) {
     const data = await res.json();
     return { data };
   } catch (err: any) {
+    if (err?.name === 'TimeoutError' || err?.message?.includes('aborted')) {
+      return { error: 'The server is taking longer than expected. It might be waking up—please try again in a moment.' };
+    }
     return { error: err.message || 'Network error' };
   }
 }
@@ -44,11 +49,13 @@ export async function startNewChat() {
   }
 
   try {
+    const signal = typeof AbortSignal !== 'undefined' && AbortSignal.timeout ? AbortSignal.timeout(10000) : undefined;
     const res = await fetch(`${API_URL}/chat/new`, {
       method: 'POST',
       headers: {
         'Cookie': `access_token=${accessToken}`,
       },
+      signal,
       cache: 'no-store',
     });
 
@@ -70,10 +77,13 @@ export async function getActiveChatSession() {
   if (!accessToken) return null;
 
   try {
+    // 5-second timeout ensures SSR never hits Vercel 504 Function Invocation Timeout
+    const signal = typeof AbortSignal !== 'undefined' && AbortSignal.timeout ? AbortSignal.timeout(5000) : undefined;
     const res = await fetch(`${API_URL}/chat/sessions`, {
       headers: {
         'Cookie': `access_token=${accessToken}`,
       },
+      signal,
       cache: 'no-store',
     });
 

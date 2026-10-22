@@ -119,4 +119,17 @@ def root():
 
 @app.get("/health")
 def health():
-    return {"status": "ok", "version": "1.0.1"}
+    db_status = "ok"
+    try:
+        from sqlalchemy import text
+        with SessionLocal() as session:
+            session.execute(text("SELECT 1"))
+    except Exception as e:
+        db_status = f"unreachable: {str(e)}"
+
+    is_ok = db_status == "ok"
+    return {
+        "status": "ok" if is_ok else "degraded",
+        "database": db_status,
+        "version": "1.0.2"
+    }

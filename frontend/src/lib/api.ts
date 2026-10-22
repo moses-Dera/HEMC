@@ -19,8 +19,12 @@ export async function apiFetch(endpoint: string, options: RequestInit = {}) {
     headers.set('Content-Type', 'application/json');
   }
 
+  // Set 6-second timeout to prevent Vercel 504 FUNCTION_INVOCATION_TIMEOUT on cold starts
+  const signal = options.signal || (typeof AbortSignal !== 'undefined' && AbortSignal.timeout ? AbortSignal.timeout(6000) : undefined);
+
   const res = await fetch(`${API_URL}${endpoint}`, {
     ...options,
+    signal,
     headers,
     cache: 'no-store',
   });
