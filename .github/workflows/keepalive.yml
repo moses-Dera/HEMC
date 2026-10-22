@@ -1,0 +1,31 @@
+name: Keepalive Backend & Database
+
+on:
+  schedule:
+    # Run every 10 minutes (Render sleeps after 15 mins of inactivity)
+    - cron: '*/10 * * * *'
+  workflow_dispatch: # Allows manual trigger from GitHub UI
+
+jobs:
+  ping:
+    name: Ping Health & DB Endpoint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Backend Health Endpoint
+        env:
+          BACKEND_URL: ${{ secrets.BACKEND_URL || 'https://hemc-backend.onrender.com' }}
+        run: |
+          TARGET_URL="${BACKEND_URL%/}/health"
+          echo "Pinging health endpoint: $TARGET_URL"
+          
+          # Attempt ping with a 45-second timeout in case of Render cold boot
+          RESPONSE=$(curl -s -m 45 "$TARGET_URL" || echo '{"status":"timeout"}')
+          echo "Response received: $RESPONSE"
+          
+          if echo "$RESPONSE" | grep -q '"status"'; then
+            echo "✅ Keepalive ping successful! Server and Database kept awake."
+          else
+            echo "⚠️ Non-standard response, retrying in 5 seconds..."
+            sleep 5
+            curl -s -m 45 "$TARGET_URL" || true
+          fi
