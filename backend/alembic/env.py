@@ -38,7 +38,8 @@ from app.modules.doctor_dashboard.models.patient_handover import PatientHandover
 from app.modules.notifications.model import Notification
 
 
-config.set_main_option("sqlalchemy.url", settings.DATABASE_URL)
+from app.core.db import get_active_database_url
+config.set_main_option("sqlalchemy.url", get_active_database_url())
 target_metadata = Base.metadata
 
 # other values from the config, defined by the needs of env.py,
