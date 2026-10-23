@@ -20,7 +20,26 @@ A comprehensive, robust medical consultation and clinical triage platform featur
 
 Running with Docker ensures you have an isolated, offline-resilient PostgreSQL database and a visual database GUI running on your laptop with zero host OS configuration.
 
-### 1. Start the Database & Graphical DB Viewer (Docker)
+### 🌟 1-Click Automated Startup (Fastest & Recommended)
+We provide 1-click scripts that start Docker, run migrations, seed data, and launch both backend and frontend servers automatically:
+
+* **On Linux / macOS:**
+  ```bash
+  ./start_all.sh
+  ```
+  *(Press `Ctrl + C` at any time to gracefully stop all services).*
+
+* **On Windows (Command Prompt or File Explorer):**
+  - **To Start:** Double-click `start_all.bat` (or run `start_all.bat` in CMD).
+  - **To Stop:** Double-click `stop_all.bat` (or run `stop_all.bat` in CMD).
+
+---
+
+### 🛠️ Manual Step-by-Step Setup (Alternative)
+
+If you prefer to start each service manually in separate terminals:
+
+#### 1. Start the Database & Graphical DB Viewer (Docker)
 In the project root directory, run:
 ```bash
 docker compose up -d
