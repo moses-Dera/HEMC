@@ -9,12 +9,12 @@ from app.modules.users.model import User
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login", auto_error=False)
 
 def get_token(request: Request, token: str = Depends(oauth2_scheme)):
-    # BFF pattern: check HttpOnly cookie first, fallback to Bearer token
+    # BFF pattern: check Bearer token if provided, fallback to HttpOnly cookie
+    if token:
+        return token
     cookie_token = request.cookies.get("access_token")
     if cookie_token:
         return cookie_token
-    if token:
-        return token
     raise HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Not authenticated",

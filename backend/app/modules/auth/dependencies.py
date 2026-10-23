@@ -7,12 +7,13 @@ from app.modules.users.model import User
 
 
 def get_current_user(request: Request, db: Session = Depends(get_db)) -> User:
-    """Read access_token from httpOnly cookie or Authorization header."""
-    token = request.cookies.get("access_token")
+    """Read access_token from Authorization header or httpOnly cookie."""
+    auth_header = request.headers.get("Authorization")
+    token = None
+    if auth_header and auth_header.startswith("Bearer "):
+        token = auth_header.split("Bearer ")[1].strip()
     if not token:
-        auth_header = request.headers.get("Authorization")
-        if auth_header and auth_header.startswith("Bearer "):
-            token = auth_header.split("Bearer ")[1].strip()
+        token = request.cookies.get("access_token")
 
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,

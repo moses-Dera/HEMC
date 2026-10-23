@@ -4,6 +4,10 @@ import enum
 from app.core.base import Base
 
 class HandoverReasonEnum(str, enum.Enum):
+    shift_end = "shift_end"
+    specialist_review = "specialist_review"
+    emergency_escalation = "emergency_escalation"
+    workload_balancing = "workload_balancing"
     auto_shift_end = "auto_shift_end"
     emergency = "emergency"
     specialization = "specialization"

@@ -62,6 +62,7 @@ def test_user(client, db_session):
         "password": "password123"
     })
     token = response.json()["access_token"]
+    client.cookies.clear()
     
     return {
         "email": "test@example.com",
@@ -83,10 +84,39 @@ def test_admin(client, db_session):
         "password": "adminpass"
     })
     token = response.json()["access_token"]
+    client.cookies.clear()
     
     return {
         "email": "admin@example.com",
         "password": "adminpass",
+        "token": token,
+        "headers": {"Authorization": f"Bearer {token}"}
+    }
+
+@pytest.fixture(scope="function")
+def test_doctor(client, db_session):
+    from app.core.security import get_password_hash
+    from app.modules.doctors.models.doctor import Doctor
+    
+    doc_user = User(name="Dr. Test Physician", email="doctor@example.com", hashed_password=get_password_hash("docpass"), role="doctor")
+    db_session.add(doc_user)
+    db_session.commit()
+    
+    doctor_record = Doctor(user_id=doc_user.id, specialization="General Medicine & Tropical Health", is_available=True)
+    db_session.add(doctor_record)
+    db_session.commit()
+    
+    response = client.post("/auth/login", json={
+        "email": "doctor@example.com",
+        "password": "docpass"
+    })
+    token = response.json()["access_token"]
+    client.cookies.clear()
+    
+    return {
+        "email": "doctor@example.com",
+        "user_id": doc_user.id,
+        "doctor_id": doctor_record.doctor_id,
         "token": token,
         "headers": {"Authorization": f"Bearer {token}"}
     }

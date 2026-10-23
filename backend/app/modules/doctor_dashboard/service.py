@@ -75,7 +75,7 @@ class DashboardService:
             if patient:
                 latest_session = self.db.query(ChatSession).filter(
                     ChatSession.user_id == patient.id
-                ).order_by(ChatSession.created_at.desc()).first()
+                ).order_by(ChatSession.started_at.desc()).first()
 
                 if latest_session:
                     msgs = self.db.query(ChatMessage).filter(
