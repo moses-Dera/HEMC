@@ -11,9 +11,14 @@ echo "=========================================================="
 # 1. Start Docker Database & Adminer DB Viewer
 echo "[1/4] Starting PostgreSQL and Adminer via Docker..."
 if command -v docker &> /dev/null; then
-    docker compose up -d
+    if docker compose up -d 2>/dev/null; then
+        echo "✓ Docker containers (PostgreSQL + Adminer) started successfully."
+    else
+        echo "⚠️ Note: Docker daemon is not active. (If using Docker, open Docker Desktop)."
+        echo "   Continuing startup with existing database connection..."
+    fi
 else
-    echo "⚠️ Docker command not found. Assuming local PostgreSQL is already running."
+    echo "⚠️ Docker command not found. Continuing with configured database in backend/.env..."
 fi
 
 # 2. Wait briefly for database port readiness
