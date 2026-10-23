@@ -129,17 +129,62 @@ class NotificationService:
         return self.send_email(email, subject, body)
 
     def notify_appointment_status(self, email: str, name: str = "Student", date: str = "Scheduled Date", status: str = "Confirmed", doctor_name: str = "Dr. Medical Centre"):
-        subject = f"HEMC: Appointment {status.upper()}"
-        body = (
-            f"Dear {name},\n\n"
-            f"This is an update regarding your scheduled appointment at the UNN Medical Centre.\n\n"
-            f"- Scheduled Time: {date}\n"
-            f"- Updated Status: {status.upper()}\n"
-            f"- Attending Physician: {doctor_name}\n\n"
-            f"You can view your appointment history and clinical notes anytime on your student dashboard.\n\n"
-            f"Best regards,\n"
-            f"HEMC Clinical Services"
-        )
+        status_clean = status.lower()
+        if status_clean == "confirmed":
+            subject = f"HEMC: Clinic Appointment Confirmed - {doctor_name}"
+            body = (
+                f"Dear {name},\n\n"
+                f"Your medical consultation slot at the UNN Medical Centre has been APPROVED and CONFIRMED.\n\n"
+                f"CONSULTATION DETAILS:\n"
+                f"- Scheduled Date & Time: {date}\n"
+                f"- Attending Physician: {doctor_name}\n"
+                f"- Clinic Location: UNN Medical Centre Consult Room, Nsukka Campus\n\n"
+                f"CLINIC PREPARATION INSTRUCTIONS:\n"
+                f"1. Please arrive at the Medical Centre 10 minutes prior to your time.\n"
+                f"2. Bring your UNN Student ID card for verification.\n"
+                f"3. Check in at the front desk and report to the consultation queue.\n\n"
+                f"You can view your confirmed booking on your student portal: https://hemc.vercel.app/dashboard\n\n"
+                f"Warm regards,\n"
+                f"HEMC Appointments Desk\n"
+                f"University of Nigeria, Nsukka"
+            )
+        elif status_clean in ("cancelled", "rejected"):
+            subject = "HEMC: Appointment Request Update - Rescheduling Needed"
+            body = (
+                f"Dear {name},\n\n"
+                f"We are writing to inform you that your appointment request for {date} could not be confirmed at this time.\n\n"
+                f"REASON:\n"
+                f"- {doctor_name} is currently unavailable for this slot (the physician may be off-duty, in emergency ward rotation, or the schedule is fully booked).\n\n"
+                f"WHAT TO DO NEXT:\n"
+                f"1. Log in to your HEMC student portal to choose another on-duty doctor or alternative date: https://hemc.vercel.app/dashboard#booking-section\n"
+                f"2. If you are experiencing symptoms, launch the 24/7 AI Health Assistant for immediate guidance.\n"
+                f"3. For acute or severe medical distress, proceed immediately to the UNN Medical Centre Emergency Unit (Open 24/7).\n\n"
+                f"Best regards,\n"
+                f"HEMC Clinical Services\n"
+                f"UNN Medical Centre"
+            )
+        elif status_clean == "completed":
+            subject = "HEMC: Consultation Summary & Clinic Slip Available"
+            body = (
+                f"Dear {name},\n\n"
+                f"Your consultation with {doctor_name} on {date} has been certified and completed.\n\n"
+                f"Your official UNN Medical Centre Clinic Slip and electronic prescription are now available for review and download.\n\n"
+                f"Access your clinic slip here: https://hemc.vercel.app/history?tab=appointments\n\n"
+                f"Wishing you a quick and steady recovery,\n"
+                f"HEMC Clinical Team"
+            )
+        else:
+            subject = f"HEMC: Appointment {status.upper()}"
+            body = (
+                f"Dear {name},\n\n"
+                f"This is an update regarding your scheduled appointment at the UNN Medical Centre.\n\n"
+                f"- Scheduled Time: {date}\n"
+                f"- Updated Status: {status.upper()}\n"
+                f"- Attending Physician: {doctor_name}\n\n"
+                f"You can view your appointment details anytime on your dashboard.\n\n"
+                f"Best regards,\n"
+                f"HEMC Clinical Services"
+            )
         return self.send_email(email, subject, body)
 
     def notify_urgent_triage(self, email: str, name: str = "Student", symptoms_summary: str = "High fever > 3 days with persistent vomiting"):

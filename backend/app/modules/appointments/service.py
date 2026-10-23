@@ -73,6 +73,14 @@ class AppointmentService:
         return [self._enrich_appointment(a) for a in appts]
 
     def create_appointment(self, user_id: int, req: AppointmentCreate):
+        from datetime import datetime, timezone
+        now_utc = datetime.now(timezone.utc)
+        target_dt = req.appointment_date
+        if target_dt.tzinfo is None:
+            target_dt = target_dt.replace(tzinfo=timezone.utc)
+        if target_dt < now_utc:
+            raise ValueError("Appointment date cannot be in the past. Please select an upcoming date and time.")
+
         appt = self.repo.create(user_id, {"appointment_date": req.appointment_date})
         
         # Automatically assign to specified or on-duty/available doctor

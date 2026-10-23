@@ -61,7 +61,7 @@ interface DashboardClientProps {
 export default function DashboardClient({ user, doctors, appointments }: DashboardClientProps) {
   const router = useRouter();
   const [selectedDoctorId, setSelectedDoctorId] = useState<number>(
-    doctors.length > 0 ? doctors[0].doctor_id : 1
+    doctors.find((d) => d.is_available)?.doctor_id || (doctors[0]?.doctor_id ?? 1)
   );
   const [isPending, startTransition] = useTransition();
   const [bookingStatus, setBookingStatus] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
@@ -115,6 +115,7 @@ export default function DashboardClient({ user, doctors, appointments }: Dashboa
 
   const upcomingApts = appointments.filter(a => a.status !== 'cancelled');
   const confirmedApt = appointments.find(a => a.status === 'confirmed');
+  const latestCancelledApt = appointments.find(a => a.status === 'cancelled');
 
   return (
     <div className="flex-1 overflow-y-auto scrollbar-thin w-full p-6 pb-28 md:p-8 md:pb-8 flex flex-col gap-7">
@@ -167,6 +168,36 @@ export default function DashboardClient({ user, doctors, appointments }: Dashboa
           >
             View Details
           </Link>
+        </div>
+      )}
+
+      {/* ── Rejected / Cancelled Notice Banner ── */}
+      {latestCancelledApt && !confirmedApt && (
+        <div className="p-4 md:p-5 rounded-2xl bg-gradient-to-r from-red-500/10 via-amber-500/10 to-orange-500/10 border border-red-500/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-xs">
+          <div className="flex items-start gap-3.5">
+            <div className="w-10 h-10 rounded-xl bg-red-600 text-white flex items-center justify-center shrink-0 shadow-xs">
+              <AlertCircle className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2 flex-wrap">
+                <h3 className="text-sm font-bold text-slate-900 dark:text-white">
+                  Appointment Request Update: Rescheduling Needed
+                </h3>
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-red-600 text-white uppercase tracking-wider">
+                  Not Confirmed
+                </span>
+              </div>
+              <p className="text-xs text-slate-600 dark:text-slate-300 mt-1 leading-relaxed">
+                Your previous appointment request for <strong>{formatDate(latestCancelledApt.appointment_date)}</strong> {latestCancelledApt.doctor_name ? `with ${latestCancelledApt.doctor_name}` : ''} could not be confirmed (the physician may be off-duty or emergency rotation). Please select an on-duty doctor below.
+              </p>
+            </div>
+          </div>
+          <a
+            href="#booking-section"
+            className="px-3.5 py-2 rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs font-bold whitespace-nowrap shadow-xs transition cursor-pointer"
+          >
+            Reschedule Visit
+          </a>
         </div>
       )}
 
@@ -263,8 +294,11 @@ export default function DashboardClient({ user, doctors, appointments }: Dashboa
             <form onSubmit={handleBook} className="flex flex-col gap-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
-                    Select On-Duty Doctor
+                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5 flex items-center justify-between">
+                    <span>Select On-Duty Doctor</span>
+                    <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded-full">
+                      {doctors.filter((d) => d.is_available !== false).length} On Duty Now
+                    </span>
                   </label>
                   <select
                     name="doctor_id"
@@ -272,25 +306,40 @@ export default function DashboardClient({ user, doctors, appointments }: Dashboa
                     onChange={(e) => setSelectedDoctorId(Number(e.target.value))}
                     className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-primary"
                   >
-                    {doctors.map((doc) => (
-                      <option key={doc.doctor_id} value={doc.doctor_id}>
-                        {doc.name || `Dr. Specialization ${doc.doctor_id}`} ({doc.specialization})
-                      </option>
-                    ))}
+                    <optgroup label="Available On-Duty Physicians">
+                      {doctors.filter((d) => d.is_available !== false).map((doc) => (
+                        <option key={doc.doctor_id} value={doc.doctor_id}>
+                          🟢 {doc.name || `Dr. Specialization ${doc.doctor_id}`} ({doc.specialization || 'Clinical Generalist'})
+                        </option>
+                      ))}
+                    </optgroup>
+                    {doctors.some((d) => d.is_available === false) && (
+                      <optgroup label="Currently Off Duty / Unavailable">
+                        {doctors.filter((d) => d.is_available === false).map((doc) => (
+                          <option key={doc.doctor_id} value={doc.doctor_id} disabled>
+                            🔴 {doc.name || `Dr. Specialization ${doc.doctor_id}`} ({doc.specialization}) — Off Duty
+                          </option>
+                        ))}
+                      </optgroup>
+                    )}
                   </select>
                 </div>
 
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
-                    Preferred Date & Time
+                    Preferred Date &amp; Time
                   </label>
                   <input
                     type="datetime-local"
                     name="appointment_date"
                     required
+                    min={new Date().toISOString().slice(0, 16)}
                     defaultValue={new Date(Date.now() + 86400000).toISOString().slice(0, 16)}
                     className="w-full px-4 py-2 rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-primary"
                   />
+                  <p className="text-[10px] text-slate-400 mt-1">
+                    Clinic hours: 08:00 - 17:00 Mon-Fri (Emergency Triage open 24/7).
+                  </p>
                 </div>
               </div>
 

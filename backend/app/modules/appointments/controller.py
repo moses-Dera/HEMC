@@ -22,7 +22,10 @@ def get_all_appointments(service: AppointmentService = Depends(get_appointment_s
 
 @router.post("/", response_model=AppointmentResponse)
 def book_appointment(req: AppointmentCreate, user: User = Depends(get_current_user), service: AppointmentService = Depends(get_appointment_service)):
-    return service.create_appointment(user.id, req)
+    try:
+        return service.create_appointment(user.id, req)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
 @router.patch("/{id}", response_model=AppointmentResponse)
 def update_appointment(id: int, req: AppointmentUpdate, user: User = Depends(get_current_user), service: AppointmentService = Depends(get_appointment_service)):
