@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Calendar,
   Clock,
@@ -46,6 +46,14 @@ export default function AppointmentConfirmModal({
 }: AppointmentConfirmModalProps) {
   const [selectedDocId, setSelectedDocId] = useState<number>(appointment?.doctorId || 0);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (appointment?.doctorId) {
+      setSelectedDocId(appointment.doctorId);
+    } else if (doctorsList && doctorsList.length > 0) {
+      setSelectedDocId(doctorsList[0].doctor_id);
+    }
+  }, [appointment?.appointmentId, appointment?.doctorId, doctorsList]);
 
   if (!isOpen || !appointment) return null;
 
@@ -155,27 +163,44 @@ export default function AppointmentConfirmModal({
 
           {/* Doctor Assignment */}
           <div className="space-y-1.5">
-            <label className="text-[11px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 flex items-center gap-1.5">
-              <Stethoscope className="w-3.5 h-3.5 text-primary" />
-              Assigned Physician
-            </label>
+            <div className="flex items-center justify-between">
+              <label className="text-[11px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 flex items-center gap-1.5">
+                <Stethoscope className="w-3.5 h-3.5 text-primary" />
+                Assigned Physician
+              </label>
+              {appointment.doctorName && (
+                <span className="text-[10px] text-primary font-bold bg-primary/10 px-2 py-0.5 rounded-full">
+                  Student Preferred: {appointment.doctorName}
+                </span>
+              )}
+            </div>
+
             {allowDoctorChange && doctorsList && doctorsList.length > 0 ? (
-              <select
-                value={selectedDocId || appointment.doctorId || doctorsList[0].doctor_id}
-                onChange={(e) => setSelectedDocId(Number(e.target.value))}
-                className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 font-medium focus:outline-none focus:border-primary text-xs"
-              >
-                {doctorsList.map((d) => (
-                  <option key={d.doctor_id} value={d.doctor_id}>
-                    {d.name || `Dr. ${d.specialization}`} ({d.specialization || 'Clinical Generalist'})
-                  </option>
-                ))}
-              </select>
+              <div>
+                <select
+                  value={selectedDocId || appointment.doctorId || doctorsList[0].doctor_id}
+                  onChange={(e) => setSelectedDocId(Number(e.target.value))}
+                  className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 font-medium focus:outline-none focus:border-primary text-xs"
+                >
+                  {doctorsList.map((d) => {
+                    const isStudentChoice = d.doctor_id === appointment.doctorId;
+                    return (
+                      <option key={d.doctor_id} value={d.doctor_id}>
+                        {d.name || `Dr. ${d.specialization}`} ({d.specialization || 'Clinical Generalist'})
+                        {isStudentChoice ? ' ★ (Student Choice)' : ''}
+                      </option>
+                    );
+                  })}
+                </select>
+                <p className="text-[10px] text-slate-400 mt-1">
+                  Keep student&apos;s chosen doctor or reassign if that physician is currently off-duty or in emergency duty.
+                </p>
+              </div>
             ) : (
               <div className="p-2.5 rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-slate-800/40 text-slate-800 dark:text-slate-200 font-semibold flex items-center justify-between">
                 <span>{appointment.doctorName || 'Medical Officer on Duty'}</span>
                 <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold bg-emerald-100 dark:bg-emerald-900/40 px-2 py-0.5 rounded-full">
-                  Confirmed Attending
+                  Student Requested
                 </span>
               </div>
             )}
