@@ -91,3 +91,16 @@ export async function sendDoctorEmailAction(toEmail: string, subject: string, bo
   }
 }
 
+export async function getDoctorDashboardDataAction(doctorId?: number) {
+  try {
+    const { getDoctorOverview, getDoctorPatients } = await import('@/lib/api');
+    const [overview, patients] = await Promise.all([
+      getDoctorOverview(doctorId),
+      getDoctorPatients(doctorId),
+    ]);
+    return { success: true, overview, patients };
+  } catch (err: any) {
+    return { success: false, error: err.message || 'Failed to load doctor dashboard' };
+  }
+}
+

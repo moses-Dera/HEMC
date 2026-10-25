@@ -142,6 +142,42 @@ def seed_db():
                 ))
                 db.commit()
 
+        # --- 7. DUTY SHIFTS & PATIENT ASSIGNMENTS FOR DOCTORS ---
+        from app.modules.doctors.models.duty_shift import DutyShift, ShiftStatusEnum
+        from app.modules.doctor_dashboard.models.patient_assignment import PatientAssignment, AssignmentStatusEnum
+        from app.modules.appointments.model import Appointment, AppointmentStatusEnum
+        from datetime import date, time
+
+        docs = db.query(Doctor).all()
+        if len(docs) >= 3:
+            # Current shifts
+            shifts_to_add = [
+                {"doctor_id": docs[1].doctor_id, "shift_date": date(2026, 10, 25), "start_time": time(14, 0), "end_time": time(20, 0), "status": ShiftStatusEnum.scheduled},
+                {"doctor_id": docs[0].doctor_id, "shift_date": date(2026, 10, 26), "start_time": time(8, 0), "end_time": time(14, 0), "status": ShiftStatusEnum.scheduled},
+                {"doctor_id": docs[1].doctor_id, "shift_date": date(2026, 10, 26), "start_time": time(14, 0), "end_time": time(20, 0), "status": ShiftStatusEnum.scheduled},
+                {"doctor_id": docs[2].doctor_id, "shift_date": date(2026, 10, 27), "start_time": time(8, 0), "end_time": time(14, 0), "status": ShiftStatusEnum.scheduled},
+                {"doctor_id": docs[1].doctor_id, "shift_date": date(2026, 10, 27), "start_time": time(14, 0), "end_time": time(20, 0), "status": ShiftStatusEnum.scheduled},
+                {"doctor_id": docs[0].doctor_id, "shift_date": date(2026, 10, 28), "start_time": time(8, 0), "end_time": time(14, 0), "status": ShiftStatusEnum.scheduled},
+                {"doctor_id": docs[2].doctor_id, "shift_date": date(2026, 10, 28), "start_time": time(14, 0), "end_time": time(20, 0), "status": ShiftStatusEnum.scheduled},
+            ]
+            for s in shifts_to_add:
+                if not db.query(DutyShift).filter(DutyShift.doctor_id == s["doctor_id"], DutyShift.shift_date == s["shift_date"]).first():
+                    db.add(DutyShift(**s))
+            db.commit()
+
+            # Ensure patient assignments distributed
+            appts = db.query(Appointment).all()
+            for idx, a in enumerate(appts):
+                target_doc = docs[idx % len(docs)]
+                asgn = db.query(PatientAssignment).filter(PatientAssignment.appointment_id == a.appointment_id).first()
+                if not asgn:
+                    db.add(PatientAssignment(
+                        appointment_id=a.appointment_id,
+                        doctor_id=target_doc.doctor_id,
+                        status=AssignmentStatusEnum.active
+                    ))
+            db.commit()
+
         print("Database seeding completed successfully!")
     except Exception as e:
         print(f"Error seeding database: {e}")

@@ -8,6 +8,7 @@ import {
   updateAppointmentStatusAction,
   toggleDoctorAvailabilityAction,
   requestPatientHandoverAction,
+  getDoctorDashboardDataAction,
 } from '@/app/actions/doctor';
 import ClinicSlipModal from '@/components/ClinicSlipModal';
 import AppointmentConfirmModal from '@/components/AppointmentConfirmModal';
@@ -44,22 +45,49 @@ export default function DoctorDashboardClient({
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'confirmed' | 'completed'>('all');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSwitchingDoctor, setIsSwitchingDoctor] = useState(false);
+  const [activeDoctorId, setActiveDoctorId] = useState<number | undefined>(
+    selectedDoctorId || initialOverview?.doctor_id || doctorsList[0]?.doctor_id
+  );
 
   // Sync state when props change via route navigation
   useEffect(() => {
     setOverview(initialOverview);
     setPatients(initialPatients);
     setIsAvailable(initialOverview?.is_available ?? true);
-  }, [initialOverview, initialPatients]);
+    if (selectedDoctorId) {
+      setActiveDoctorId(selectedDoctorId);
+    }
+  }, [initialOverview, initialPatients, selectedDoctorId]);
+
+  // Handle instant switching
+  const handleSelectDoctor = async (docId: number) => {
+    setActiveDoctorId(docId);
+    setIsSwitchingDoctor(true);
+    router.push(`/doctor/dashboard?doctor_id=${docId}`);
+    try {
+      const res = await getDoctorDashboardDataAction(docId);
+      if (res.success && res.overview) {
+        setOverview(res.overview);
+        setPatients(res.patients || []);
+        setIsAvailable(res.overview.is_available ?? true);
+        toast.success(`Clinical desk loaded: ${res.overview.name}`);
+      }
+    } catch {
+      toast.error('Failed to load doctor clinical desk');
+    } finally {
+      setIsSwitchingDoctor(false);
+    }
+  };
 
   // Compute active doctor identity for consistent display
   const activeDoctorRecord = useMemo(() => {
     return (
       doctorsList.find(
-        (d) => d.doctor_id === (selectedDoctorId || overview?.doctor_id)
+        (d) => d.doctor_id === (activeDoctorId || overview?.doctor_id)
       ) || doctorsList[0]
     );
-  }, [doctorsList, selectedDoctorId, overview]);
+  }, [doctorsList, activeDoctorId, overview]);
 
   const doctorDisplayName = overview?.name || activeDoctorRecord?.name || 'Medical Officer';
   const doctorSpecialization = overview?.specialization || activeDoctorRecord?.specialization || 'General Practitioner';
@@ -219,12 +247,10 @@ export default function DoctorDashboardClient({
       {userRole === 'admin' && (
         <AdminDoctorPreviewBar
           doctors={doctorsList}
-          currentDoctorId={selectedDoctorId || overview?.doctor_id || activeDoctorRecord?.doctor_id}
+          currentDoctorId={activeDoctorId || overview?.doctor_id || activeDoctorRecord?.doctor_id}
           currentDoctorName={doctorDisplayName}
           currentDoctorSpecialization={doctorSpecialization}
-          onSelectDoctor={(docId) => {
-            router.push(`/doctor/dashboard?doctor_id=${docId}`);
-          }}
+          onSelectDoctor={handleSelectDoctor}
         />
       )}
 
