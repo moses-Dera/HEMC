@@ -40,6 +40,7 @@ export default function AdminAppointmentsManager({
   const [appointments, setAppointments] = useState<AdminAppointmentData[]>(initialAppointments);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'confirmed' | 'completed' | 'cancelled'>('all');
+  const [doctorFilter, setDoctorFilter] = useState<string>('all');
   const [confirmingAppointment, setConfirmingAppointment] = useState<AdminAppointmentData | null>(null);
   const [isUpdating, setIsUpdating] = useState<number | null>(null);
 
@@ -47,6 +48,7 @@ export default function AdminAppointmentsManager({
   const filteredAppointments = useMemo(() => {
     return appointments.filter((apt) => {
       const matchesStatus = statusFilter === 'all' || apt.status.toLowerCase() === statusFilter;
+      const matchesDoctor = doctorFilter === 'all' || (apt.doctor_id != null && apt.doctor_id.toString() === doctorFilter);
       const q = searchQuery.toLowerCase().trim();
       const matchesSearch =
         !q ||
@@ -55,9 +57,9 @@ export default function AdminAppointmentsManager({
         apt.patient_reg_number?.toLowerCase().includes(q) ||
         apt.doctor_name?.toLowerCase().includes(q) ||
         apt.patient_department?.toLowerCase().includes(q);
-      return matchesStatus && matchesSearch;
+      return matchesStatus && matchesDoctor && matchesSearch;
     });
-  }, [appointments, statusFilter, searchQuery]);
+  }, [appointments, statusFilter, doctorFilter, searchQuery]);
 
   // Handle direct status change (confirm or cancel)
   const handleStatusChange = async (appointmentId: number, newStatus: 'confirmed' | 'cancelled', doctorId?: number) => {
@@ -185,9 +187,9 @@ export default function AdminAppointmentsManager({
           </div>
         </div>
 
-        {/* Search Bar */}
-        <div className="p-4 bg-slate-50/60 dark:bg-slate-800/20 border-b border-slate-100 dark:border-white/[0.06]">
-          <div className="relative max-w-md">
+        {/* Search & Doctor Filter Bar */}
+        <div className="p-4 bg-slate-50/60 dark:bg-slate-800/20 border-b border-slate-100 dark:border-white/[0.06] flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+          <div className="relative flex-1 max-w-md">
             <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
             <input
               type="text"
@@ -196,6 +198,24 @@ export default function AdminAppointmentsManager({
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full pl-9 pr-4 py-2 text-xs rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 focus:outline-none focus:border-purple-500 transition"
             />
+          </div>
+
+          <div className="flex items-center gap-2">
+            <div className="relative">
+              <Stethoscope className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+              <select
+                value={doctorFilter}
+                onChange={(e) => setDoctorFilter(e.target.value)}
+                className="pl-8 pr-8 py-2 text-xs rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 focus:outline-none focus:border-purple-500 transition cursor-pointer font-medium"
+              >
+                <option value="all">All Attending Doctors ({doctors.length})</option>
+                {doctors.map((doc) => (
+                  <option key={doc.doctor_id} value={doc.doctor_id.toString()}>
+                    {doc.name || `Dr. (ID: ${doc.doctor_id})`} {doc.specialization ? `— ${doc.specialization}` : ''}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
         </div>
 

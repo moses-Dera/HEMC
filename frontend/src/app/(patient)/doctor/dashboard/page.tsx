@@ -5,7 +5,10 @@ import DoctorDashboardClient from './DoctorDashboardClient';
 export default async function DoctorDashboardPage() {
   const user = await getMe();
 
-  if (!user || (user.role !== 'doctor' && user.role !== 'admin')) {
+  if (!user || user.role !== 'doctor') {
+    if (user?.role === 'admin') {
+      redirect('/admin/dashboard');
+    }
     redirect('/dashboard');
   }
 

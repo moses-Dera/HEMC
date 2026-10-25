@@ -20,7 +20,7 @@ export default function Sidebar({ userRole }: { userRole?: string }) {
   if (userRole === 'admin') {
     navItems.push({ name: 'System Admin', href: '/admin/dashboard', icon: ShieldCheck });
   }
-  if (userRole === 'doctor' || userRole === 'admin') {
+  if (userRole === 'doctor') {
     navItems.push({ name: 'Doctor Panel', href: '/doctor/dashboard', icon: Stethoscope });
   }
 

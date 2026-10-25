@@ -24,11 +24,7 @@ class DashboardService:
         self.db = db
 
     def _resolve_doctor(self, current_user_id: int):
-        doc = self.db.query(Doctor).filter(Doctor.user_id == current_user_id).first()
-        if not doc:
-            # If current user is an admin or test user, fallback to the first doctor for demonstration
-            doc = self.db.query(Doctor).first()
-        return doc
+        return self.db.query(Doctor).filter(Doctor.user_id == current_user_id).first()
 
     def get_my_patients(self, current_user_id: int):
         doc = self._resolve_doctor(current_user_id)

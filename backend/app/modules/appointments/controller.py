@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from typing import List
 from app.core.db import get_db
-from app.modules.auth.dependencies import get_current_user, require_admin, require_doctor
+from app.modules.auth.dependencies import get_current_user, require_admin, require_doctor, require_staff
 from app.modules.users.model import User
 from .dto import AppointmentResponse, AppointmentCreate, AppointmentUpdate
 from .service import AppointmentService
@@ -16,7 +16,7 @@ def get_appointment_service(db: Session = Depends(get_db)):
 def get_my_appointments(user: User = Depends(get_current_user), service: AppointmentService = Depends(get_appointment_service)):
     return service.get_user_appointments(user.id)
     
-@router.get("/all", response_model=List[AppointmentResponse], dependencies=[Depends(require_doctor)])
+@router.get("/all", response_model=List[AppointmentResponse], dependencies=[Depends(require_staff)])
 def get_all_appointments(service: AppointmentService = Depends(get_appointment_service)):
     return service.get_all_appointments()
 
