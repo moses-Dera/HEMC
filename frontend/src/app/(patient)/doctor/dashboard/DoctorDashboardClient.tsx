@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Activity, Search, Users, ShieldCheck, Stethoscope } from 'lucide-react';
+import { Activity, Search, Users } from 'lucide-react';
 import { toast } from 'sonner';
 import {
   updateAppointmentStatusAction,
@@ -19,6 +19,7 @@ import DoctorPatientMobileCard from './_components/DoctorPatientMobileCard';
 import DoctorHandoverModal from './_components/DoctorHandoverModal';
 import DoctorConsultationModal from './_components/DoctorConsultationModal';
 import DoctorPatientDetailsModal from './_components/DoctorPatientDetailsModal';
+import AdminDoctorPreviewBar from './_components/AdminDoctorPreviewBar';
 import { DoctorOverview, PatientAssignment, ColleagueDoctor } from './types';
 
 interface DoctorDashboardClientProps {
@@ -37,20 +38,31 @@ export default function DoctorDashboardClient({
   selectedDoctorId,
 }: DoctorDashboardClientProps) {
   const router = useRouter();
-  const [overview] = useState<DoctorOverview | null>(initialOverview);
+  const [overview, setOverview] = useState<DoctorOverview | null>(initialOverview);
   const [patients, setPatients] = useState<PatientAssignment[]>(initialPatients);
   const [isAvailable, setIsAvailable] = useState<boolean>(initialOverview?.is_available ?? true);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'confirmed' | 'completed'>('all');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [currentDoctorSelect, setCurrentDoctorSelect] = useState<string>(
-    selectedDoctorId?.toString() || initialOverview?.doctor_id?.toString() || (doctorsList[0]?.doctor_id?.toString() ?? '')
-  );
 
-  const handleDoctorChange = (newDocId: string) => {
-    setCurrentDoctorSelect(newDocId);
-    router.push(`/doctor/dashboard?doctor_id=${newDocId}`);
-  };
+  // Sync state when props change via route navigation
+  useEffect(() => {
+    setOverview(initialOverview);
+    setPatients(initialPatients);
+    setIsAvailable(initialOverview?.is_available ?? true);
+  }, [initialOverview, initialPatients]);
+
+  // Compute active doctor identity for consistent display
+  const activeDoctorRecord = useMemo(() => {
+    return (
+      doctorsList.find(
+        (d) => d.doctor_id === (selectedDoctorId || overview?.doctor_id)
+      ) || doctorsList[0]
+    );
+  }, [doctorsList, selectedDoctorId, overview]);
+
+  const doctorDisplayName = overview?.name || activeDoctorRecord?.name || 'Medical Officer';
+  const doctorSpecialization = overview?.specialization || activeDoctorRecord?.specialization || 'General Practitioner';
 
   // Appointment Confirmation Modal State
   const [confirmingPatient, setConfirmingPatient] = useState<PatientAssignment | null>(null);
@@ -205,48 +217,21 @@ export default function DoctorDashboardClient({
     <div className="w-full max-w-6xl mx-auto p-4 md:p-8 space-y-6 pb-28 md:pb-12">
       {/* ── 0. Admin Doctor Preview Switcher ── */}
       {userRole === 'admin' && (
-        <div className="bg-gradient-to-r from-purple-900 to-indigo-950 text-white p-4 sm:p-5 rounded-2xl shadow-md border border-purple-400/20 flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center shrink-0">
-              <ShieldCheck className="w-5 h-5 text-purple-300" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="text-[10px] font-extrabold uppercase tracking-wider bg-purple-500/30 text-purple-200 px-2.5 py-0.5 rounded-full border border-purple-400/30">
-                  Admin Preview Mode
-                </span>
-                <span className="text-xs text-purple-200 font-medium">Clinical Consultation Desk</span>
-              </div>
-              <p className="text-xs text-purple-100/90 mt-0.5">
-                Currently previewing desk for: <strong className="text-white font-semibold">{overview?.name || 'Attending Physician'}</strong> ({overview?.specialization || 'Clinical Doctor'})
-              </p>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2.5 bg-black/20 p-2 rounded-xl border border-white/10 shrink-0">
-            <label className="text-xs font-semibold text-purple-200">Switch Doctor to Preview:</label>
-            <div className="relative">
-              <Stethoscope className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-purple-300 pointer-events-none" />
-              <select
-                value={currentDoctorSelect}
-                onChange={(e) => handleDoctorChange(e.target.value)}
-                className="pl-8 pr-8 py-1.5 text-xs rounded-lg bg-purple-950 text-white font-medium border border-purple-400/40 focus:outline-none focus:ring-2 focus:ring-purple-400 cursor-pointer"
-              >
-                {doctorsList.map((doc) => (
-                  <option key={doc.doctor_id} value={doc.doctor_id.toString()} className="bg-slate-900 text-white">
-                    {doc.name || `Doctor #${doc.doctor_id}`} {doc.specialization ? `— ${doc.specialization}` : ''}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-        </div>
+        <AdminDoctorPreviewBar
+          doctors={doctorsList}
+          currentDoctorId={selectedDoctorId || overview?.doctor_id || activeDoctorRecord?.doctor_id}
+          currentDoctorName={doctorDisplayName}
+          currentDoctorSpecialization={doctorSpecialization}
+          onSelectDoctor={(docId) => {
+            router.push(`/doctor/dashboard?doctor_id=${docId}`);
+          }}
+        />
       )}
 
       {/* ── 1. Doctor Header ── */}
       <DoctorHeader
-        doctorName={overview?.name}
-        specialization={overview?.specialization}
+        doctorName={doctorDisplayName}
+        specialization={doctorSpecialization}
         isAvailable={isAvailable}
         onToggleAvailability={handleToggleAvailability}
       />

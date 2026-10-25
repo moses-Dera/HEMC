@@ -16,10 +16,12 @@ export default async function DoctorDashboardPage({
   const resolvedParams = searchParams ? await searchParams : undefined;
   const targetDoctorId = resolvedParams?.doctor_id ? parseInt(resolvedParams.doctor_id, 10) : undefined;
 
-  const [overview, patients, doctors] = await Promise.all([
-    getDoctorOverview(targetDoctorId),
-    getDoctorPatients(targetDoctorId),
-    getDoctors(),
+  const doctors = await getDoctors();
+  const effectiveDoctorId = targetDoctorId || (user.role === 'admin' && doctors.length > 0 ? doctors[0].doctor_id : undefined);
+
+  const [overview, patients] = await Promise.all([
+    getDoctorOverview(effectiveDoctorId),
+    getDoctorPatients(effectiveDoctorId),
   ]);
 
   return (
@@ -29,7 +31,7 @@ export default async function DoctorDashboardPage({
         initialPatients={patients}
         doctorsList={doctors}
         userRole={user.role}
-        selectedDoctorId={targetDoctorId || overview?.doctor_id}
+        selectedDoctorId={effectiveDoctorId || overview?.doctor_id}
       />
     </div>
   );
