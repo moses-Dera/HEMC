@@ -23,11 +23,22 @@ class DashboardService:
         self.repo = DashboardRepository(db)
         self.db = db
 
-    def _resolve_doctor(self, current_user_id: int):
-        return self.db.query(Doctor).filter(Doctor.user_id == current_user_id).first()
+    def _resolve_doctor(self, current_user_id: int, target_doctor_id: int = None):
+        if target_doctor_id is not None:
+            doc = self.db.query(Doctor).filter(Doctor.doctor_id == target_doctor_id).first()
+            if doc:
+                return doc
 
-    def get_my_patients(self, current_user_id: int):
-        doc = self._resolve_doctor(current_user_id)
+        doc = self.db.query(Doctor).filter(Doctor.user_id == current_user_id).first()
+        if not doc:
+            # If current user is an admin previewing without specific ID, default to first doctor
+            user = self.db.query(User).filter(User.id == current_user_id).first()
+            if user and user.role == "admin":
+                doc = self.db.query(Doctor).first()
+        return doc
+
+    def get_my_patients(self, current_user_id: int, target_doctor_id: int = None):
+        doc = self._resolve_doctor(current_user_id, target_doctor_id)
         if not doc:
             return []
 
@@ -121,13 +132,13 @@ class DashboardService:
             )
         return results
 
-    def get_doctor_overview(self, current_user_id: int):
-        doc = self._resolve_doctor(current_user_id)
+    def get_doctor_overview(self, current_user_id: int, target_doctor_id: int = None):
+        doc = self._resolve_doctor(current_user_id, target_doctor_id)
         if not doc:
             raise ValueError("No clinical doctor profile found for this user account")
 
         user = self.db.query(User).filter(User.id == doc.user_id).first()
-        patients = self.get_my_patients(current_user_id)
+        patients = self.get_my_patients(current_user_id, target_doctor_id)
         
         pending_count = sum(1 for p in patients if p.appointment_status in ("pending", "active"))
         confirmed_count = sum(1 for p in patients if p.appointment_status == "confirmed")

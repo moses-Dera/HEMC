@@ -39,6 +39,7 @@ export default function BottomNav({ userRole }: { userRole?: string }) {
 
   if (userRole === 'admin') {
     navItems.push({ name: 'Admin', href: '/admin/dashboard', icon: ShieldCheck });
+    navItems.push({ name: 'Doctor', href: '/doctor/dashboard', icon: Stethoscope });
   }
   if (userRole === 'doctor') {
     navItems.push({ name: 'Doctor', href: '/doctor/dashboard', icon: Stethoscope });

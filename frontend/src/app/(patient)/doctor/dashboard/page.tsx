@@ -2,19 +2,23 @@ import { getDoctorOverview, getDoctorPatients, getDoctors, getMe } from '@/lib/a
 import { redirect } from 'next/navigation';
 import DoctorDashboardClient from './DoctorDashboardClient';
 
-export default async function DoctorDashboardPage() {
+export default async function DoctorDashboardPage({
+  searchParams,
+}: {
+  searchParams?: Promise<{ doctor_id?: string }>;
+}) {
   const user = await getMe();
 
-  if (!user || user.role !== 'doctor') {
-    if (user?.role === 'admin') {
-      redirect('/admin/dashboard');
-    }
+  if (!user || (user.role !== 'doctor' && user.role !== 'admin')) {
     redirect('/dashboard');
   }
 
+  const resolvedParams = searchParams ? await searchParams : undefined;
+  const targetDoctorId = resolvedParams?.doctor_id ? parseInt(resolvedParams.doctor_id, 10) : undefined;
+
   const [overview, patients, doctors] = await Promise.all([
-    getDoctorOverview(),
-    getDoctorPatients(),
+    getDoctorOverview(targetDoctorId),
+    getDoctorPatients(targetDoctorId),
     getDoctors(),
   ]);
 
@@ -24,6 +28,8 @@ export default async function DoctorDashboardPage() {
         initialOverview={overview}
         initialPatients={patients}
         doctorsList={doctors}
+        userRole={user.role}
+        selectedDoctorId={targetDoctorId || overview?.doctor_id}
       />
     </div>
   );

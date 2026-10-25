@@ -92,9 +92,10 @@ export async function getDoctors() {
 
 // ── Doctor Dashboard ─────────────────────────────────────────────────────────
 
-export async function getDoctorPatients() {
+export async function getDoctorPatients(doctorId?: number) {
   try {
-    const res = await apiFetch('/doctor-dashboard/patients');
+    const query = doctorId ? `?doctor_id=${doctorId}` : '';
+    const res = await apiFetch(`/doctor-dashboard/patients${query}`);
     if (!res.ok) return [];
     return res.json();
   } catch {
@@ -102,9 +103,10 @@ export async function getDoctorPatients() {
   }
 }
 
-export async function getDoctorOverview() {
+export async function getDoctorOverview(doctorId?: number) {
   try {
-    const res = await apiFetch('/doctor-dashboard/overview');
+    const query = doctorId ? `?doctor_id=${doctorId}` : '';
+    const res = await apiFetch(`/doctor-dashboard/overview${query}`);
     if (!res.ok) return null;
     return res.json();
   } catch {
