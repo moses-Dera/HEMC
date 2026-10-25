@@ -2,6 +2,9 @@ import { getDoctorOverview, getDoctorPatients, getDoctors, getMe } from '@/lib/a
 import { redirect } from 'next/navigation';
 import DoctorDashboardClient from './DoctorDashboardClient';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export default async function DoctorDashboardPage({
   searchParams,
 }: {
@@ -27,6 +30,7 @@ export default async function DoctorDashboardPage({
   return (
     <div className="w-full max-w-6xl mx-auto p-4 md:p-8 space-y-8 pb-32 md:pb-12 overflow-y-auto h-full">
       <DoctorDashboardClient
+        key={effectiveDoctorId || 'default'}
         initialOverview={overview}
         initialPatients={patients}
         doctorsList={doctors}

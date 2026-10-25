@@ -13,6 +13,7 @@ export async function apiFetch(endpoint: string, options: RequestInit = {}) {
   const headers = new Headers(options.headers);
   if (accessToken) {
     headers.set('Cookie', `access_token=${accessToken}`);
+    headers.set('Authorization', `Bearer ${accessToken}`);
   }
   
   if (!headers.has('Content-Type') && options.body) {

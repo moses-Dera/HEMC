@@ -52,9 +52,11 @@ export default function DoctorDashboardClient({
 
   // Sync state when props change via route navigation
   useEffect(() => {
-    setOverview(initialOverview);
-    setPatients(initialPatients);
-    setIsAvailable(initialOverview?.is_available ?? true);
+    if (initialOverview) {
+      setOverview(initialOverview);
+      setPatients(initialPatients);
+      setIsAvailable(initialOverview.is_available ?? true);
+    }
     if (selectedDoctorId) {
       setActiveDoctorId(selectedDoctorId);
     }
@@ -64,7 +66,6 @@ export default function DoctorDashboardClient({
   const handleSelectDoctor = async (docId: number) => {
     setActiveDoctorId(docId);
     setIsSwitchingDoctor(true);
-    router.push(`/doctor/dashboard?doctor_id=${docId}`);
     try {
       const res = await getDoctorDashboardDataAction(docId);
       if (res.success && res.overview) {
@@ -72,11 +73,14 @@ export default function DoctorDashboardClient({
         setPatients(res.patients || []);
         setIsAvailable(res.overview.is_available ?? true);
         toast.success(`Clinical desk loaded: ${res.overview.name}`);
+      } else {
+        toast.error(res.error || 'Failed to load doctor clinical desk');
       }
     } catch {
       toast.error('Failed to load doctor clinical desk');
     } finally {
       setIsSwitchingDoctor(false);
+      router.replace(`/doctor/dashboard?doctor_id=${docId}`, { scroll: false });
     }
   };
 
@@ -250,6 +254,7 @@ export default function DoctorDashboardClient({
           currentDoctorId={activeDoctorId || overview?.doctor_id || activeDoctorRecord?.doctor_id}
           currentDoctorName={doctorDisplayName}
           currentDoctorSpecialization={doctorSpecialization}
+          isLoading={isSwitchingDoctor}
           onSelectDoctor={handleSelectDoctor}
         />
       )}
@@ -264,16 +269,19 @@ export default function DoctorDashboardClient({
 
       {/* ── 2. Clinical KPI Metrics ── */}
       <DoctorKPICards
-        totalCount={patients.length}
+        totalCount={overview?.total_assigned ?? patients.length}
         pendingCount={
+          overview?.pending_count ??
           patients.filter(
             (p) => p.appointment_status === 'pending' || p.appointment_status === 'active'
           ).length
         }
         confirmedCount={
+          overview?.confirmed_count ??
           patients.filter((p) => p.appointment_status === 'confirmed').length
         }
         completedCount={
+          overview?.completed_count ??
           patients.filter((p) => p.appointment_status === 'completed').length
         }
       />

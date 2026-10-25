@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
-import { ShieldCheck, Stethoscope, ChevronDown, Check } from 'lucide-react';
+import { ShieldCheck, Stethoscope, ChevronDown, Check, Loader2 } from 'lucide-react';
 import { ColleagueDoctor } from '../types';
 
 interface AdminDoctorPreviewBarProps {
@@ -9,6 +9,7 @@ interface AdminDoctorPreviewBarProps {
   currentDoctorId?: number;
   currentDoctorName?: string;
   currentDoctorSpecialization?: string;
+  isLoading?: boolean;
   onSelectDoctor: (doctorId: number) => void;
 }
 
@@ -17,6 +18,7 @@ export default function AdminDoctorPreviewBar({
   currentDoctorId,
   currentDoctorName,
   currentDoctorSpecialization,
+  isLoading,
   onSelectDoctor,
 }: AdminDoctorPreviewBarProps) {
   const [isOpen, setIsOpen] = useState(false);
@@ -109,11 +111,15 @@ export default function AdminDoctorPreviewBar({
                 </p>
               </div>
             </div>
-            <ChevronDown
-              className={`w-4 h-4 text-slate-400 shrink-0 transition-transform duration-200 ${
-                isOpen ? 'rotate-180 text-primary' : ''
-              }`}
-            />
+            {isLoading ? (
+              <Loader2 className="w-4 h-4 text-primary animate-spin shrink-0" />
+            ) : (
+              <ChevronDown
+                className={`w-4 h-4 text-slate-400 shrink-0 transition-transform duration-200 ${
+                  isOpen ? 'rotate-180 text-primary' : ''
+                }`}
+              />
+            )}
           </button>
 
           {/* Custom Popover Panel */}
