@@ -20,7 +20,25 @@ def get_active_database_url() -> str:
     return db_url
 
 active_database_url = get_active_database_url()
-engine = create_engine(active_database_url)
+
+engine_kwargs = {}
+if "postgresql" in active_database_url:
+    engine_kwargs.update({
+        "pool_size": 10,
+        "max_overflow": 20,
+        "pool_recycle": 300,
+        "pool_pre_ping": True,
+    })
+    if "supabase" in active_database_url or "aws" in active_database_url:
+        engine_kwargs["connect_args"] = {
+            "connect_timeout": 5,
+            "keepalives": 1,
+            "keepalives_idle": 30,
+            "keepalives_interval": 10,
+            "keepalives_count": 5,
+        }
+
+engine = create_engine(active_database_url, **engine_kwargs)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 def get_db():

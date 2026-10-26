@@ -45,4 +45,4 @@ class AuthService:
             raise InvalidCredentials()
         
         access_token = create_access_token(data={"sub": user.email, "role": user.role})
-        return access_token
+        return access_token, user

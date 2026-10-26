@@ -1,4 +1,5 @@
 import { cookies } from 'next/headers';
+import { cache } from 'react';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000/api/v1';
 
@@ -20,8 +21,8 @@ export async function apiFetch(endpoint: string, options: RequestInit = {}) {
     headers.set('Content-Type', 'application/json');
   }
 
-  // Set 6-second timeout to prevent Vercel 504 FUNCTION_INVOCATION_TIMEOUT on cold starts
-  const signal = options.signal || (typeof AbortSignal !== 'undefined' && AbortSignal.timeout ? AbortSignal.timeout(6000) : undefined);
+  // Set 10-second timeout to handle cross-region cloud DB calls cleanly
+  const signal = options.signal || (typeof AbortSignal !== 'undefined' && AbortSignal.timeout ? AbortSignal.timeout(10000) : undefined);
 
   const res = await fetch(`${API_URL}${endpoint}`, {
     ...options,
@@ -35,7 +36,7 @@ export async function apiFetch(endpoint: string, options: RequestInit = {}) {
 
 // ── Auth ─────────────────────────────────────────────────────────────────────
 
-export async function getMe() {
+export const getMe = cache(async () => {
   try {
     const res = await apiFetch('/users/me');
     if (!res.ok) return null;
@@ -43,7 +44,7 @@ export async function getMe() {
   } catch {
     return null;
   }
-}
+});
 
 // ── Chat ─────────────────────────────────────────────────────────────────────
 

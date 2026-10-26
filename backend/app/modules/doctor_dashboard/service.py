@@ -42,26 +42,77 @@ class DashboardService:
         if not doc:
             return []
 
-        assignments = self.db.query(PatientAssignment).filter(
-            PatientAssignment.doctor_id == doc.doctor_id
-        ).all()
+        assignment_rows = (
+            self.db.query(PatientAssignment, Appointment, User)
+            .outerjoin(Appointment, Appointment.appointment_id == PatientAssignment.appointment_id)
+            .outerjoin(User, User.id == Appointment.user_id)
+            .filter(PatientAssignment.doctor_id == doc.doctor_id)
+            .all()
+        )
+
+        if not assignment_rows:
+            return []
+
+        patient_ids = list({user.id for _, _, user in assignment_rows if user})
+
+        # Batch fetch symptom checks
+        latest_check_by_user = {}
+        if patient_ids:
+            checks = (
+                self.db.query(SymptomCheck)
+                .filter(SymptomCheck.user_id.in_(patient_ids))
+                .order_by(SymptomCheck.timestamp.desc())
+                .all()
+            )
+            for c in checks:
+                if c.user_id not in latest_check_by_user:
+                    latest_check_by_user[c.user_id] = c
+
+        # Batch fetch recent chat messages
+        recent_chat_messages_by_user = {}
+        if patient_ids:
+            sessions = (
+                self.db.query(ChatSession)
+                .filter(ChatSession.user_id.in_(patient_ids))
+                .order_by(ChatSession.started_at.desc())
+                .all()
+            )
+            latest_session_by_user = {}
+            for s in sessions:
+                if s.user_id not in latest_session_by_user:
+                    latest_session_by_user[s.user_id] = s.session_id
+
+            session_ids = list(latest_session_by_user.values())
+            if session_ids:
+                all_msgs = (
+                    self.db.query(ChatMessage)
+                    .filter(ChatMessage.session_id.in_(session_ids))
+                    .order_by(ChatMessage.created_at.asc())
+                    .all()
+                )
+                msgs_by_session = {}
+                for m in all_msgs:
+                    msgs_by_session.setdefault(m.session_id, []).append(m)
+
+                for uid, sid in latest_session_by_user.items():
+                    user_msgs = msgs_by_session.get(sid, [])[-15:]
+                    recent_chat_messages_by_user[uid] = [
+                        {
+                            "role": m.role.value if hasattr(m.role, "value") else str(m.role),
+                            "content": m.content,
+                            "time": m.created_at.strftime("%I:%M %p") if m.created_at else "",
+                        }
+                        for m in user_msgs
+                    ]
 
         results = []
-        for asgn in assignments:
-            appt = self.db.query(Appointment).filter(Appointment.appointment_id == asgn.appointment_id).first()
-            patient = self.db.query(User).filter(User.id == appt.user_id).first() if appt else None
-            
-            # Check for latest symptom triage check
-            latest_check = None
+        for asgn, appt, patient in assignment_rows:
+            patient_id = patient.id if patient else (appt.user_id if appt else 0)
+            latest_check = latest_check_by_user.get(patient_id) if patient else None
+
             red_flags_list = []
             fever_duration_val = None
             check_id_val = None
-
-            if patient:
-                latest_check = self.db.query(SymptomCheck).filter(
-                    SymptomCheck.user_id == patient.id
-                ).order_by(SymptomCheck.timestamp.desc()).first()
-
             if latest_check:
                 check_id_val = latest_check.check_id
                 fever_duration_val = latest_check.fever_duration
@@ -77,25 +128,7 @@ class DashboardService:
             triage_urgency = "Urgent / Emergency" if is_urgent else "Routine Consultation"
             triage_summary = f"Fever: {latest_check.fever_duration}" if (latest_check and latest_check.fever_duration) else "Clinical consultation booking"
 
-            # Fetch recent AI chat messages for clinical context
-            recent_chat_messages = []
-            if patient:
-                latest_session = self.db.query(ChatSession).filter(
-                    ChatSession.user_id == patient.id
-                ).order_by(ChatSession.started_at.desc()).first()
-
-                if latest_session:
-                    msgs = self.db.query(ChatMessage).filter(
-                        ChatMessage.session_id == latest_session.session_id
-                    ).order_by(ChatMessage.created_at.asc()).limit(15).all()
-
-                    for m in msgs:
-                        role_str = m.role.value if hasattr(m.role, "value") else str(m.role)
-                        recent_chat_messages.append({
-                            "role": role_str,
-                            "content": m.content,
-                            "time": m.created_at.strftime("%I:%M %p") if m.created_at else ""
-                        })
+            recent_chat_messages = recent_chat_messages_by_user.get(patient_id, [])
 
             appt_status = appt.status.value if (appt and hasattr(appt.status, "value")) else (str(appt.status) if appt else "pending")
 
@@ -106,7 +139,7 @@ class DashboardService:
                     doctor_id=asgn.doctor_id,
                     assigned_at=asgn.assigned_at,
                     status=asgn.status.value if hasattr(asgn.status, "value") else str(asgn.status),
-                    patient_id=patient.id if patient else appt.user_id if appt else 0,
+                    patient_id=patient_id,
                     patient_name=patient.name if patient else "Student Patient",
                     patient_email=patient.email if patient else "",
                     patient_department=patient.department if patient else None,

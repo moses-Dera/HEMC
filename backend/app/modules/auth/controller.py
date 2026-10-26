@@ -36,7 +36,7 @@ def set_auth_cookies(response: Response, access_token: str, refresh_token: str):
 def register(req: UserCreateRequest, response: Response, service: AuthService = Depends(get_auth_service)):
     try:
         user = service.register_user(req)
-        access_token = service.authenticate_user(UserLoginRequest(email=req.email, password=req.password))
+        access_token, _ = service.authenticate_user(UserLoginRequest(email=req.email, password=req.password))
         refresh_token = create_refresh_token(data={"sub": user.email, "role": user.role})
         set_auth_cookies(response, access_token, refresh_token)
         return TokenResponse(access_token=access_token)
@@ -45,9 +45,7 @@ def register(req: UserCreateRequest, response: Response, service: AuthService = 
 
 @router.post("/login", response_model=TokenResponse)
 def login(req: UserLoginRequest, response: Response, service: AuthService = Depends(get_auth_service)):
-    access_token = service.authenticate_user(req)
-    # We need the user to get their role for refresh token
-    user = service.repo.get_user_by_email(req.email)
+    access_token, user = service.authenticate_user(req)
     refresh_token = create_refresh_token(data={"sub": user.email, "role": user.role})
     set_auth_cookies(response, access_token, refresh_token)
     return TokenResponse(access_token=access_token)

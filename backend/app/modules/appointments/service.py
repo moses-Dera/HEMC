@@ -26,7 +26,7 @@ class AppointmentService:
                     doc_spec = doc.specialization
                     doc_user = self.repo.db.query(User).filter(User.id == doc.user_id).first()
                     if doc_user:
-                        doc_name = f"Dr. {doc_user.name}"
+                        doc_name = doc_user.name if doc_user.name.startswith("Dr.") else f"Dr. {doc_user.name}"
         except Exception as e:
             print(f"Error enriching appointment: {e}")
 
@@ -64,13 +64,71 @@ class AppointmentService:
             "created_at": appt.created_at,
         }
 
+    def _get_enriched_appointments(self, user_id: int = None):
+        from app.modules.appointments.model import Appointment
+        from app.modules.doctor_dashboard.models.patient_assignment import PatientAssignment
+        from app.modules.doctors.models.doctor import Doctor
+        from app.modules.users.model import User
+        from sqlalchemy.orm import aliased
+
+        DoctorUser = aliased(User)
+        PatientUser = aliased(User)
+
+        query = (
+            self.repo.db.query(
+                Appointment,
+                PatientAssignment.doctor_id,
+                Doctor.specialization.label("doctor_specialization"),
+                DoctorUser.name.label("doctor_name"),
+                PatientUser.name.label("patient_name"),
+                PatientUser.email.label("patient_email"),
+                PatientUser.reg_number.label("patient_reg_number"),
+                PatientUser.department.label("patient_department"),
+                PatientUser.phone_number.label("patient_phone"),
+            )
+            .outerjoin(PatientAssignment, PatientAssignment.appointment_id == Appointment.appointment_id)
+            .outerjoin(Doctor, Doctor.doctor_id == PatientAssignment.doctor_id)
+            .outerjoin(DoctorUser, DoctorUser.id == Doctor.user_id)
+            .outerjoin(PatientUser, PatientUser.id == Appointment.user_id)
+        )
+
+        if user_id is not None:
+            query = query.filter(Appointment.user_id == user_id)
+
+        rows = query.order_by(Appointment.appointment_date.desc()).all()
+
+        results = []
+        for row in rows:
+            appt = row[0]
+            doc_name = (
+                row.doctor_name
+                if (row.doctor_name and row.doctor_name.startswith("Dr."))
+                else (f"Dr. {row.doctor_name}" if row.doctor_name else None)
+            )
+            results.append({
+                "appointment_id": appt.appointment_id,
+                "user_id": appt.user_id,
+                "appointment_date": appt.appointment_date,
+                "status": appt.status.value if hasattr(appt.status, "value") else str(appt.status),
+                "prescription": appt.prescription,
+                "clinical_notes": appt.clinical_notes,
+                "doctor_id": row.doctor_id,
+                "doctor_name": doc_name,
+                "doctor_specialization": row.doctor_specialization,
+                "patient_name": row.patient_name,
+                "patient_email": row.patient_email,
+                "patient_reg_number": row.patient_reg_number,
+                "patient_department": row.patient_department,
+                "patient_phone": row.patient_phone,
+                "created_at": appt.created_at,
+            })
+        return results
+
     def get_user_appointments(self, user_id: int):
-        appts = self.repo.get_by_user(user_id)
-        return [self._enrich_appointment(a) for a in appts]
+        return self._get_enriched_appointments(user_id=user_id)
         
     def get_all_appointments(self):
-        appts = self.repo.get_all()
-        return [self._enrich_appointment(a) for a in appts]
+        return self._get_enriched_appointments()
 
     def create_appointment(self, user_id: int, req: AppointmentCreate):
         from datetime import datetime, timezone
