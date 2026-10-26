@@ -85,6 +85,10 @@ export default function AdminUsersManagement({
   // Quick Role Change
   const handleQuickRoleChange = async (user: AdminUserData, newRole: 'student' | 'doctor' | 'admin') => {
     if (user.role === newRole) return;
+    if (user.id === currentUserId && newRole !== 'admin') {
+      toast.error('You cannot change your own role to prevent losing admin access.');
+      return;
+    }
     setIsSubmitting(true);
     try {
       const res = await adminUpdateUserAction(user.id!, {
@@ -279,6 +283,7 @@ export default function AdminUsersManagement({
 
       <UserEditModal
         user={editingUser}
+        isSelf={editingUser?.id === currentUserId}
         onClose={() => setEditingUser(null)}
         onSubmit={handleEditSubmit}
         isSubmitting={isSubmitting}

@@ -64,10 +64,12 @@ class UsersService:
                 
         return user
 
-    def admin_update_user(self, user_id: int, req: AdminUserUpdateRequest, db: Session):
+    def admin_update_user(self, user_id: int, req: AdminUserUpdateRequest, current_user_id: int, db: Session):
         target_user = db.query(User).filter(User.id == user_id).first()
         if not target_user:
             raise ValueError("User not found")
+        if user_id == current_user_id and req.role and req.role != "admin":
+            raise ValueError("You cannot change your own role away from admin to prevent accidental lockout.")
         data = req.model_dump(exclude_unset=True)
         if "password" in data and data["password"]:
             data["hashed_password"] = get_password_hash(data.pop("password"))

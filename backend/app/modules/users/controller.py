@@ -31,12 +31,12 @@ def admin_create_user(req: AdminUserCreateRequest, db: Session = Depends(get_db)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
 
-@router.patch("/{id}", response_model=UserResponse, dependencies=[Depends(require_admin)])
-def admin_update_user(id: int, req: AdminUserUpdateRequest, db: Session = Depends(get_db), service: UsersService = Depends(get_users_service)):
+@router.patch("/{id}", response_model=UserResponse)
+def admin_update_user(id: int, req: AdminUserUpdateRequest, current_user: User = Depends(require_admin), db: Session = Depends(get_db), service: UsersService = Depends(get_users_service)):
     try:
-        return service.admin_update_user(id, req, db)
+        return service.admin_update_user(id, req, current_user.id, db)
     except ValueError as e:
-        raise HTTPException(status_code=404, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e))
 
 @router.delete("/{id}", dependencies=[Depends(require_admin)])
 def admin_delete_user(id: int, current_user: User = Depends(require_admin), db: Session = Depends(get_db), service: UsersService = Depends(get_users_service)):
