@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   Calendar,
   Search,
@@ -43,6 +43,10 @@ export default function AdminAppointmentsManager({
   const [doctorFilter, setDoctorFilter] = useState<string>('all');
   const [confirmingAppointment, setConfirmingAppointment] = useState<AdminAppointmentData | null>(null);
   const [isUpdating, setIsUpdating] = useState<number | null>(null);
+
+  useEffect(() => {
+    setAppointments(initialAppointments);
+  }, [initialAppointments]);
 
   // Filtered appointments
   const filteredAppointments = useMemo(() => {

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { CheckCircle2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { AdminUrgentCheckData, adminUpdateUrgentCheckStatusAction } from '@/app/actions/admin';
@@ -19,6 +19,10 @@ export default function AdminUrgentCasesQueue({ initialCases }: AdminUrgentCases
   const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'contacted' | 'reviewed'>('all');
   const [selectedCase, setSelectedCase] = useState<AdminUrgentCheckData | null>(null);
   const [isUpdating, setIsUpdating] = useState<number | null>(null);
+
+  useEffect(() => {
+    setCases(initialCases);
+  }, [initialCases]);
 
   // Metrics
   const metrics = useMemo(() => {

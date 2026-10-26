@@ -133,45 +133,27 @@ export default function AdminDashboardTabs({
       </div>
 
       {/* ── Tab Views ────────────────────────────────────────────────────── */}
-      {activeTab === 'overview' && (
-        <div className="space-y-8 animate-in fade-in duration-200">
-          <AdminAppointmentsManager initialAppointments={appointments} doctors={doctors} />
-          <AdminUrgentCasesQueue initialCases={urgentCases} />
-          <AdminUsersManagement initialUsers={users} currentUserId={currentUserId} />
-          <AdminDutyRosterScheduler initialShifts={shifts} doctors={doctors} />
-          <AdminTriageRulesManager initialRules={rules} />
-        </div>
-      )}
-
-      {activeTab === 'appointments' && (
-        <div className="animate-in fade-in duration-200">
+      <div className="space-y-8">
+        <div className={activeTab === 'overview' || activeTab === 'appointments' ? 'block' : 'hidden'}>
           <AdminAppointmentsManager initialAppointments={appointments} doctors={doctors} />
         </div>
-      )}
 
-      {activeTab === 'urgent' && (
-        <div className="animate-in fade-in duration-200">
+        <div className={activeTab === 'overview' || activeTab === 'urgent' ? 'block' : 'hidden'}>
           <AdminUrgentCasesQueue initialCases={urgentCases} />
         </div>
-      )}
 
-      {activeTab === 'users' && (
-        <div className="animate-in fade-in duration-200">
+        <div className={activeTab === 'overview' || activeTab === 'users' ? 'block' : 'hidden'}>
           <AdminUsersManagement initialUsers={users} currentUserId={currentUserId} />
         </div>
-      )}
 
-      {activeTab === 'roster' && (
-        <div className="animate-in fade-in duration-200">
+        <div className={activeTab === 'overview' || activeTab === 'roster' ? 'block' : 'hidden'}>
           <AdminDutyRosterScheduler initialShifts={shifts} doctors={doctors} />
         </div>
-      )}
 
-      {activeTab === 'triage' && (
-        <div className="animate-in fade-in duration-200">
+        <div className={activeTab === 'overview' || activeTab === 'triage' ? 'block' : 'hidden'}>
           <AdminTriageRulesManager initialRules={rules} />
         </div>
-      )}
+      </div>
     </div>
   );
 }
