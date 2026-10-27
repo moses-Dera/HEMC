@@ -3,7 +3,7 @@
 A comprehensive, robust medical consultation and clinical triage platform featuring AI-assisted knowledge querying, doctor/patient scheduling, emergency red-flag triage, and automated multi-channel notifications.
 
 > 🎓 **For Final BSc Project Defense (October 2026):**  
-> Please see the complete [DEFENSE_MANUAL.md](file:///home/moze/Desktop/HEMC/DEFENSE_MANUAL.md) for the exact 20-minute presentation guide, verbatim PowerPoint slides (Abstract, Objectives, Level-1/2 DFD, Input/Output designs), individual demonstration scripts for Member 1, Member 2, and Member 3, and the post-defense CD submission protocol.
+> Please see the complete [DEFENSE_MANUAL.md](file:///home/moze/Desktop/HEMC/DEFENSE_MANUAL.md) for the presentation guide and defense demonstration script, and [INSTALLATION_AND_USER_GUIDE.md](file:///home/moze/Desktop/HEMC/INSTALLATION_AND_USER_GUIDE.md) for the formal step-by-step installation and operational usage procedure.
 
 ---
 
